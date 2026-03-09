@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Vintage Sports Vault</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="index.html">VINTAGE<span>SPORTS</span></a>
+  </nav>
+
+  <header class="nba-hero">
+    <div class="container text-center">
+      <div class="hero-title">USER <span>LOGIN</span></div>
+      <p class="hero-sub">Sign in to your account</p>
+      <div class="hero-divider"></div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 500px; margin-top: 50px; margin-bottom: 70px;">
+    <div class="filters-bar p-4">
+      <form id="login-form">
+        <div class="mb-3">
+          <label for="loginUsername" class="form-label">Username</label>
+          <input type="text" id="loginUsername" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="loginPassword" class="form-label">Password</label>
+          <input type="password" id="loginPassword" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn-add-cart w-100">Login</button>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <a href="register.html" style="font-size: 14px; text-decoration: none;">
+            Create an account
+          </a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Vintage Sports Vault | All Rights Reserved</p>
+  </footer>
+
+  <script>
+    document.getElementById("login-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const payload = {
+        username: document.getElementById("loginUsername").value.trim(),
+        password: document.getElementById("loginPassword").value.trim()
+      };
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Login failed.");
+        }
+
+        localStorage.setItem("vsv_current_user", JSON.stringify(result.user));
+        alert("Login successful!");
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error("Login error:", error);
+        alert(error.message);
+      }
+    });
+  </script>
+</body>
+</html>

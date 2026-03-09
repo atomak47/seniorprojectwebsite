@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greatest NBA Jerseys of All Time — EliteSports</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+
+  <a class="navbar-brand" href="../index.html">
+    VINTAGE<span>SPORTS</span>
+  </a>
+
+  <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
+  <span>👤 Login</span>
+  </button>
+
+    <button class="cart-btn" onclick="window.location.href='../cart.html'">
+      <span>🛒 Cart</span>
+      <span class="cart-badge" id="cart-count">0</span>
+    </button>
+  </div>
+
+</nav>
+
+<!-- Hero -->
+<header class="nba-hero">
+    <div class="container">
+        <div class="hero-title">TOP 30 <span>NBA</span> LEGENDS</div>
+        <p class="hero-sub">AUTHENTIC JERSEYS · THE 30 GREATEST PLAYERS IN NBA HISTORY</p>
+        <div class="hero-divider"></div>
+    </div>
+</header>
+
+<!-- Main -->
+<div class="container" style="max-width:1300px;">
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="row g-3 align-items-end">
+            <div class="col-6 col-md-3">
+                <label>Team</label>
+                <select class="form-select" id="teamFilter">
+                    <option value="all">All Teams</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label>Position</label>
+                <select class="form-select" id="posFilter">
+                    <option value="all">All Positions</option>
+                    <option value="PG">PG</option>
+                    <option value="SG">SG</option>
+                    <option value="SF">SF</option>
+                    <option value="PF">PF</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label>Sort By</label>
+                <select class="form-select" id="sortFilter">
+                    <option value="default">Featured</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="name-asc">Name: A–Z</option>
+                    <option value="rating-desc">Highest Rated</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label>Search</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Player name...">
+            </div>
+        </div>
+    </div>
+
+    <div class="results-count" id="resultsCount"></div>
+    <div id="player-grid" class="row g-4"></div>
+</div>
+
+<!-- Footer -->
+<footer>© 2026 EliteSports — NBA Jersey Shop · Senior Project Portfolio</footer>
+
+<!-- Cart Overlay -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+<!-- Cart Sidebar -->
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+        <h5>🛒 Your Cart</h5>
+        <button class="btn-close-cart" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItemsList">
+        <div class="cart-empty">
+            <div class="empty-icon">🏀</div>
+            <p>Your cart is empty.<br>Add some jerseys!</p>
+        </div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-subtotal">
+            <span>Subtotal</span>
+            <span class="amount" id="cartTotal">$0.00</span>
+        </div>
+        <button class="btn-checkout" onclick="checkout()">Proceed to Checkout →</button>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../database/data.js"></script>
+<script>
+let players = window.STORE_DATA?.nba || [];
+let cart = [];
+
+function displayPlayers(items) {
+    const grid = document.getElementById("player-grid");
+    const resultsCount = document.getElementById("resultsCount");
+
+    resultsCount.textContent = `${items.length} products found`;
+
+    grid.innerHTML = items.map(player => `
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+            <div class="card h-100">
+                <div class="card-img-wrap">
+                    <img class="card-img-top" src="${player.img}" alt="${player.name}">
+                </div>
+                <div class="card-body">
+                    <div class="team-badge">${player.team}</div>
+                    <h3 class="player-name">${player.name}</h3>
+                    <p class="player-pos">${player.pos} · #${player.number}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="price">$${player.price.toFixed(2)}</div>
+                        <div class="rating">★ ${player.rating}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join("");
+}
+
+function populateTeams() {
+    const teamFilter = document.getElementById("teamFilter");
+    const teams = [...new Set(players.map(p => p.team))].sort();
+
+    teams.forEach(team => {
+        const option = document.createElement("option");
+        option.value = team;
+        option.textContent = team;
+        teamFilter.appendChild(option);
+    });
+}
+
+function applyFilters() {
+    const team = document.getElementById("teamFilter").value;
+    const pos = document.getElementById("posFilter").value;
+    const sort = document.getElementById("sortFilter").value;
+    const search = document.getElementById("searchInput").value.toLowerCase();
+
+    let filtered = [...players];
+
+    if (team !== "all") filtered = filtered.filter(p => p.team === team);
+    if (pos !== "all") filtered = filtered.filter(p => p.pos === pos);
+    if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+
+    if (sort === "price-asc") filtered.sort((a, b) => a.price - b.price);
+    if (sort === "price-desc") filtered.sort((a, b) => b.price - a.price);
+    if (sort === "name-asc") filtered.sort((a, b) => a.name.localeCompare(b.name));
+    if (sort === "rating-desc") filtered.sort((a, b) => b.rating - a.rating);
+
+    displayPlayers(filtered);
+}
+
+function init() {
+    populateTeams();
+    displayPlayers(players);
+
+    document.getElementById("teamFilter").addEventListener("change", applyFilters);
+    document.getElementById("posFilter").addEventListener("change", applyFilters);
+    document.getElementById("sortFilter").addEventListener("change", applyFilters);
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
+}
+
+init();
+
+function displayPlayers(items) {
+  const grid = document.getElementById("player-grid");
+  grid.innerHTML = items.map((player, index) => `
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card h-100">
+        <div class="card-img-wrap">
+          <img class="card-img-top" src="${player.img}" alt="${player.name}">
+        </div>
+        <div class="card-body">
+          <div class="team-badge">${player.team}</div>
+          <h3 class="player-name">${player.name}</h3>
+          <p class="player-pos">${player.pos} · #${player.number}</p>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="price">$${player.price.toFixed(2)}</div>
+            <div class="rating">★ ${player.rating}</div>
+          </div>
+          <button class="btn-add-cart" onclick="addFilteredBasketballToCart(${index})">
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  window.currentBasketballItems = items;
+}
+
+function addFilteredBasketballToCart(index) {
+  const product = window.currentBasketballItems[index];
+  addToCart(product);
+}
+
+</script>
+<script src="../database/cart.js"></script>
