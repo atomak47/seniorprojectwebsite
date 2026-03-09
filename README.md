@@ -2,6 +2,8 @@
 
 * ONCE ALL OF THIS IS DONE THE REQUIREMENTS HAVE BEEN MET *
 
+Run the code with http://localhost:3000/
+
 Need to create an administrator account 
   -add admin dashboard 
   -add inventory tracking dashboard
