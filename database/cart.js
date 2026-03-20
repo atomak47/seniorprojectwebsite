@@ -7,10 +7,19 @@ function saveCart(cart) {
 }
 
 function addToCart(product) {
+  if (!product || Number(product.stock || 0) <= 0) {
+    showToast("This item is out of stock");
+    return;
+  }
+
   const cart = getCart();
   const existing = cart.find(item => item.id === product.id);
 
   if (existing) {
+    if (existing.quantity >= Number(product.stock || 0)) {
+      showToast(`Only ${product.stock} left in stock`);
+      return;
+    }
     existing.quantity += 1;
   } else {
     cart.push({
@@ -29,6 +38,18 @@ function increaseQuantity(productId) {
   const item = cart.find(item => item.id === productId);
 
   if (!item) return;
+
+  const maxStock = Number(item.stock || 0);
+
+  if (maxStock <= 0) {
+    showToast("This item is out of stock");
+    return;
+  }
+
+  if (item.quantity >= maxStock) {
+    showToast(`Only ${maxStock} left in stock`);
+    return;
+  }
 
   item.quantity += 1;
   saveCart(cart);
@@ -134,6 +155,9 @@ function renderCartPage() {
         <h3>${item.name}</h3>
         <p>${item.team || ""}</p>
         <p>${item.type || item.pos || ""}${item.era ? " · " + item.era : ""}</p>
+        <p class="stock-status ${Number(item.stock || 0) > 0 ? 'in-stock' : 'out-stock'}">
+          ${Number(item.stock || 0) > 0 ? `In Stock (${item.stock} left)` : "Out of Stock"}
+        </p>
         <div class="cart-page-price">$${Number(item.price || 0).toFixed(2)}</div>
       </div>
 

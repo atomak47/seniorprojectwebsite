@@ -273,6 +273,18 @@ body {
 }
 .cart-badge.pop { transform: scale(1.4); }
 
+.qty-controls,
+.qty-controls span,
+.qty-controls button {
+  color: #fff !important;
+}
+
+
+.filters-bar * {
+  color: #fff !important;
+}
+
+
 /* ================= Hero ================= */
 .nba-hero {
     position: relative;
@@ -348,13 +360,52 @@ body {
 .price { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: #fff; }
 .rating { font-size: 0.8rem; color: #f0a500; }
 
-.size-group { display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap; }
-.size-btn {
-    background: #1e1e24; border: 1px solid var(--card-border); color: var(--text-muted);
-    border-radius: 6px; padding: 4px 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer;
+
+.size-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
 }
-.size-btn.active { background: var(--nba-blue); border-color: var(--nba-blue); color: #fff; }
-.size-btn:hover:not(.active) { border-color: #555; color: var(--text-main); }
+
+.size-btn {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 14px;
+    min-width: 48px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.size-btn:hover {
+    border-color: #fff;
+    transform: translateY(-1px);
+}
+
+.size-btn.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+
+.stock-status {
+  font-weight: 700;
+  margin: 6px 0;
+}
+
+.in-stock {
+  color: #4CAF50;
+}
+
+.out-stock {
+  color: #ff4d4f;
+}
+
 
 .btn-add-cart { background: var(--nba-red); color: #fff; border: none; border-radius: 8px; padding: 8px 0; width: 100%; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
 .btn-add-cart:hover { background: #a5061f; }
@@ -374,4 +425,306 @@ footer { background: #0a0a0c; border-top: 1px solid var(--card-border); color: v
 @media (max-width: 576px) {
     .nba-hero { padding: 50px 0 40px; }
     .cart-sidebar { width: 100vw; }
+}
+
+.admin-stats-row {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.admin-stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+    height: 100%;
+}
+
+.admin-stat-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.admin-stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: #fff;
+    margin: 0;
+}
+
+.admin-section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.admin-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.admin-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    color: #fff;
+    margin: 0;
+}
+
+.admin-toolbar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.admin-search {
+    max-width: 280px;
+    min-width: 220px;
+}
+
+.admin-search .form-control,
+.admin-filter .form-select {
+    background: #1e1e24;
+    border: 1px solid var(--card-border);
+    color: #fff;
+}
+
+.admin-search .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.admin-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+}
+
+.admin-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    background: transparent;
+}
+
+.admin-table thead {
+    background: #111117;
+}
+
+.admin-table th {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--card-border);
+    white-space: nowrap;
+}
+
+.admin-table td {
+    color: #fff;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--card-border);
+    vertical-align: middle;
+}
+
+.admin-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-product-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 220px;
+}
+
+.admin-product-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #1c1c26, #12121a);
+    border: 1px solid var(--card-border);
+    object-fit: contain;
+    padding: 6px;
+    flex-shrink: 0;
+}
+
+.admin-product-name {
+    color: #fff;
+    font-weight: 700;
+    margin: 0 0 4px;
+    line-height: 1.2;
+}
+
+.admin-product-meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.admin-category-badge,
+.admin-stock-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.admin-category-badge {
+    background: rgba(23,64,139,0.22);
+    border: 1px solid rgba(23,64,139,0.45);
+    color: #c7d8ff;
+}
+
+.admin-stock-badge {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--card-border);
+    color: #fff;
+}
+
+.admin-stock-badge.low {
+    background: rgba(255, 193, 7, 0.12);
+    border-color: rgba(255, 193, 7, 0.35);
+    color: #ffd86b;
+}
+
+.admin-stock-badge.out {
+    background: rgba(255, 107, 107, 0.12);
+    border-color: rgba(255, 107, 107, 0.35);
+    color: #ff8f8f;
+}
+
+.admin-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: #fff;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-btn-sm {
+    border: 1px solid var(--card-border);
+    background: #1e1e24;
+    color: #fff;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.admin-btn-sm:hover {
+    border-color: var(--nba-red);
+    background: rgba(201,8,42,0.08);
+}
+
+.admin-btn-sm.danger {
+    color: #ff8f8f;
+    border-color: rgba(255, 107, 107, 0.25);
+}
+
+.admin-btn-sm.danger:hover {
+    border-color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.08);
+}
+
+.admin-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.admin-form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.admin-modal-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.admin-label {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.admin-helper-text {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+    .admin-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-search {
+        max-width: 100%;
+        min-width: 100%;
+    }
+
+    .admin-actions {
+        flex-direction: column;
+    }
+
+    .admin-btn-sm {
+        width: 100%;
+    }
 }

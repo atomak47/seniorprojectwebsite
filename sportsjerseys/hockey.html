@@ -19,7 +19,7 @@
 
   <div class="d-flex align-items-center gap-3" style="margin-left:auto;">
     <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
-    <span>👤 Login</span>
+      <span>👤 Login</span>
     </button>
 
     <button class="cart-btn" onclick="window.location.href='../cart.html'">
@@ -40,7 +40,6 @@
 
 <!-- Main -->
 <div class="container" style="max-width:1300px;">
-  <!-- Filters -->
   <div class="filters-bar">
     <div class="row g-3 align-items-end">
       <div class="col-6 col-md-3">
@@ -88,50 +87,6 @@
 
 <script>
 let products = window.STORE_DATA?.hockey || [];
-
-function displayProducts(items) {
-  const container = document.getElementById("products-container");
-  const resultsCount = document.getElementById("resultsCount");
-
-  resultsCount.textContent = `${items.length} products found`;
-
-  if (!Array.isArray(items) || items.length === 0) {
-    container.innerHTML = `
-      <div class="col-12">
-        <div class="alert alert-warning">
-          No hockey products found.
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = items.map(product => `
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-      <div class="card h-100">
-        <div class="card-img-wrap">
-          <img 
-            class="card-img-top"
-            src="${product.image || product.img || 'https://via.placeholder.com/400x300?text=No+Image'}"
-            alt="${product.name || 'Hockey Product'}"
-          >
-        </div>
-
-        <div class="card-body">
-          <div class="team-badge">${product.team || 'Unknown Team'}</div>
-          <h3 class="player-name">${product.name || 'Unnamed Product'}</h3>
-          <p class="player-pos">${product.type || 'Jersey'} · ${product.era || 'Unknown Era'}</p>
-          <p class="mb-2">${product.desc || ''}</p>
-
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="price">$${Number(product.price || 0).toFixed(2)}</div>
-            <div class="rating">${product.era || 'Vintage'}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join("");
-}
 
 function populateFilters() {
   const teamFilter = document.getElementById("teamFilter");
@@ -199,6 +154,179 @@ function applyFilters() {
   displayProducts(filtered);
 }
 
+function getSizeStock(product, size) {
+  return Number(product?.sizes?.[size] ?? 0);
+}
+
+function getTotalStock(product) {
+  const sizes = product?.sizes || {};
+  return Number(sizes.S || 0) + Number(sizes.M || 0) + Number(sizes.L || 0) + Number(sizes.XL || 0);
+}
+
+function updateCardStock(index) {
+  const product = window.currentHockeyItems[index];
+  if (!product) return;
+
+  const sizeContainer = document.getElementById(`size-${index}`);
+  const stockEl = document.getElementById(`stock-text-${index}`);
+  const addBtn = document.getElementById(`add-btn-${index}`);
+
+  if (!sizeContainer || !stockEl || !addBtn) return;
+
+  const activeSizeBtn = sizeContainer.querySelector(".size-btn.active");
+  const selectedSize = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+
+  const selectedStock = getSizeStock(product, selectedSize);
+  const totalStock = getTotalStock(product);
+
+  if (totalStock <= 0) {
+    stockEl.textContent = "";
+    stockEl.className = "stock-status";
+    addBtn.textContent = "Unavailable";
+    addBtn.disabled = true;
+    return;
+  }
+
+  if (selectedStock > 0) {
+    stockEl.textContent = `${selectedSize} In Stock (${selectedStock} left)`;
+    stockEl.className = "stock-status in-stock";
+    addBtn.textContent = "Add to Cart";
+    addBtn.disabled = false;
+  } else {
+    stockEl.textContent = `${selectedSize} Out of Stock`;
+    stockEl.className = "stock-status out-stock";
+    addBtn.textContent = "Add to Cart";
+    addBtn.disabled = false;
+  }
+}
+
+function displayProducts(items) {
+  const container = document.getElementById("products-container");
+  const resultsCount = document.getElementById("resultsCount");
+
+  if (!container) return;
+  if (resultsCount) {
+    resultsCount.textContent = `${items.length} products found`;
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-warning">
+          No hockey products found.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  window.currentHockeyItems = items;
+
+  container.innerHTML = items.map((product, index) => {
+    const totalStock = getTotalStock(product);
+    const initialSize = "M";
+    const initialStock = getSizeStock(product, initialSize);
+
+    let stockText = "";
+    let stockClass = "";
+    let buttonText = "";
+    let buttonDisabled = "";
+
+    if (totalStock <= 0) {
+      stockText = "";
+      stockClass = "";
+      buttonText = "Unavailable";
+      buttonDisabled = "disabled";
+    } else if (initialStock > 0) {
+      stockText = `${initialSize} In Stock (${initialStock} left)`;
+      stockClass = "in-stock";
+      buttonText = "Add to Cart";
+      buttonDisabled = "";
+    } else {
+      stockText = `${initialSize} Out of Stock`;
+      stockClass = "out-stock";
+      buttonText = "Add to Cart";
+      buttonDisabled = "";
+    }
+
+    return `
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card h-100">
+          <div class="card-img-wrap">
+            <img 
+              class="card-img-top"
+              src="${product.image || product.img || 'https://via.placeholder.com/400x300?text=No+Image'}"
+              alt="${product.name || 'Hockey Product'}"
+            >
+          </div>
+
+          <div class="card-body">
+            <div class="team-badge">${product.team || 'Unknown Team'}</div>
+            <h3 class="player-name">${product.name || 'Unnamed Product'}</h3>
+            <p class="player-pos">${product.type || 'Jersey'} · ${product.era || 'Unknown Era'}</p>
+            <p class="mb-2">${product.desc || product.description || ''}</p>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="price">$${Number(product.price || 0).toFixed(2)}</div>
+              <div class="rating">${product.era || 'Vintage'}</div>
+            </div>
+
+            <p id="stock-text-${index}" class="stock-status ${stockClass}">
+              ${stockText}
+            </p>
+
+            <div class="size-buttons mb-2" id="size-${index}">
+              <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
+              <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
+              <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
+              <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
+            </div>
+
+            <button id="add-btn-${index}" class="btn-add-cart" onclick="addFilteredHockeyToCart(${index})" ${buttonDisabled}>
+              ${buttonText}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function addFilteredHockeyToCart(index) {
+  const product = window.currentHockeyItems[index];
+  if (!product) return;
+
+  const sizeContainer = document.getElementById(`size-${index}`);
+  const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
+  const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+
+  const selectedStock = getSizeStock(product, size);
+  const totalStock = getTotalStock(product);
+
+  if (totalStock <= 0) {
+    showToast("This item is unavailable");
+    return;
+  }
+
+  if (selectedStock <= 0) {
+    showToast(`${size} is out of stock`);
+    updateCardStock(index);
+    return;
+  }
+
+  addToCart({
+    ...product,
+    size
+  });
+}
+
+function selectSize(button, index) {
+  const container = button.parentElement;
+  container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
+  button.classList.add("active");
+  updateCardStock(index);
+}
+
 function init() {
   console.log("All hockey products loaded:", products.length);
   console.log(products);
@@ -213,51 +341,8 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
-function displayProducts(items) {
-  const container = document.getElementById("products-container");
-  const resultsCount = document.getElementById("resultsCount");
-
-  resultsCount.textContent = `${items.length} products found`;
-
-  window.currentHockeyItems = items;
-
-  container.innerHTML = items.map((product, index) => `
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-      <div class="card h-100">
-        <div class="card-img-wrap">
-          <img 
-            class="card-img-top"
-            src="${product.image || product.img || 'https://via.placeholder.com/400x300?text=No+Image'}"
-            alt="${product.name || 'Hockey Product'}"
-          >
-        </div>
-        <div class="card-body">
-          <div class="team-badge">${product.team || 'Unknown Team'}</div>
-          <h3 class="player-name">${product.name || 'Unnamed Product'}</h3>
-          <p class="player-pos">${product.type || 'Jersey'} · ${product.era || 'Unknown Era'}</p>
-          <p class="mb-2">${product.desc || ''}</p>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="price">$${Number(product.price || 0).toFixed(2)}</div>
-            <div class="rating">${product.era || 'Vintage'}</div>
-          </div>
-
-          <button class="btn-add-cart" onclick="addFilteredHockeyToCart(${index})">
-            Add to Cart
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join("");
-}
-
-function addFilteredHockeyToCart(index) {
-  const product = window.currentHockeyItems[index];
-  addToCart(product);
-}
-
 </script>
+
 <script src="../database/cart.js"></script>
 </body>
 </html>

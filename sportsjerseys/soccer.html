@@ -1,108 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Vintage Soccer Jerseys</title>
-
-<link rel="stylesheet" href="../css/style.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greatest Soccer Jerseys of All Time — EliteSports</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
-<!-- NAVBAR -->
+<!-- Navbar -->
+<nav class="navbar">
+  <a class="navbar-brand" href="../index.html">
+    VINTAGE<span>SPORTS</span>
+  </a>
 
-<nav class="navbar d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3" style="margin-left:auto;">
+    <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
+      <span>👤 Login</span>
+    </button>
 
-<a class="navbar-brand" href="../index.html">
-VINTAGE<span>SPORTS</span>
-</a>
-
-<button class="cart-btn" onclick="toggleCart()">
-🛒 Cart
-<span id="cart-count">0</span>
-</button>
-
+    <button class="cart-btn" onclick="window.location.href='../cart.html'">
+      <span>🛒 Cart</span>
+      <span class="cart-badge" id="cart-count">0</span>
+    </button>
+  </div>
 </nav>
 
+<!-- Hero -->
+<header class="nba-hero">
+    <div class="container">
+        <div class="hero-title">TOP 30 <span>SOCCER</span> LEGENDS</div>
+        <p class="hero-sub">AUTHENTIC JERSEYS · THE 30 GREATEST PLAYERS IN SOCCER HISTORY</p>
+        <div class="hero-divider"></div>
+    </div>
+</header>
 
-<!-- PAGE TITLE -->
+<!-- Main -->
+<div class="container" style="max-width:1300px;">
+    <div class="filters-bar">
+        <div class="row g-3 align-items-end">
+            <div class="col-6 col-md-3">
+                <label>Team</label>
+                <select class="form-select" id="teamFilter">
+                    <option value="all">All Teams</option>
+                </select>
+            </div>
 
-<section class="container mt-5">
+            <div class="col-6 col-md-3">
+                <label>Position</label>
+                <select class="form-select" id="posFilter">
+                    <option value="all">All Positions</option>
+                    <option value="GK">GK</option>
+                    <option value="CB">CB</option>
+                    <option value="LB">LB</option>
+                    <option value="RB">RB</option>
+                    <option value="CDM">CDM</option>
+                    <option value="CM">CM</option>
+                    <option value="CAM">CAM</option>
+                    <option value="LM">LM</option>
+                    <option value="RM">RM</option>
+                    <option value="LW">LW</option>
+                    <option value="RW">RW</option>
+                    <option value="ST">ST</option>
+                    <option value="CF">CF</option>
+                </select>
+            </div>
 
-<h1 class="page-title text-center mb-4">
-Vintage Soccer Jerseys
-</h1>
+            <div class="col-6 col-md-3">
+                <label>Sort By</label>
+                <select class="form-select" id="sortFilter">
+                    <option value="default">Featured</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="name-asc">Name: A–Z</option>
+                    <option value="rating-desc">Highest Rated</option>
+                </select>
+            </div>
 
-<div id="product-grid" class="row g-4"></div>
+            <div class="col-6 col-md-3">
+                <label>Search</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Player name...">
+            </div>
+        </div>
+    </div>
 
-</section>
-
-
-<!-- DATA -->
-
-<script src="../data/data.js"></script>
-
-
-<!-- PAGE SCRIPT -->
-
-<script>
-
-const grid = document.getElementById("product-grid")
-
-function loadSoccerProducts(){
-
-let soccerProducts = window.PRODUCTS.filter(
-p => p.sport === "soccer"
-)
-
-soccerProducts.forEach(product => {
-
-let card = document.createElement("div")
-
-card.className = "col-md-3"
-
-card.innerHTML = `
-
-<div class="product-card">
-
-<h5>${product.name}</h5>
-
-<p class="team">${product.team}</p>
-
-<p class="era">${product.era}</p>
-
-<p class="price">$${product.price}</p>
-
-<button class="add-btn"
-onclick="addToCart('${product.id}')">
-Add To Cart
-</button>
-
+    <div class="results-count" id="resultsCount"></div>
+    <div id="player-grid" class="row g-4"></div>
 </div>
 
-`
+<!-- Footer -->
+<footer>© 2026 EliteSports — Soccer Jersey Shop · Senior Project Portfolio</footer>
 
-grid.appendChild(card)
+<!-- Cart Overlay -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
 
-})
+<!-- Cart Sidebar -->
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+        <h5>🛒 Your Cart</h5>
+        <button class="btn-close-cart" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItemsList">
+        <div class="cart-empty">
+            <div class="empty-icon">⚽</div>
+            <p>Your cart is empty.<br>Add some jerseys!</p>
+        </div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-subtotal">
+            <span>Subtotal</span>
+            <span class="amount" id="cartTotal">$0.00</span>
+        </div>
+        <button class="btn-checkout" onclick="checkout()">Proceed to Checkout →</button>
+    </div>
+</div>
 
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../database/data.js"></script>
+<script>
+let players = window.STORE_DATA?.soccer || [];
+let cart = [];
+
+function populateTeams() {
+    const teamFilter = document.getElementById("teamFilter");
+    const teams = [...new Set(players.map(p => p.team))].sort();
+
+    teams.forEach(team => {
+        const option = document.createElement("option");
+        option.value = team;
+        option.textContent = team;
+        teamFilter.appendChild(option);
+    });
 }
 
-loadSoccerProducts()
+function applyFilters() {
+    const team = document.getElementById("teamFilter").value;
+    const pos = document.getElementById("posFilter").value;
+    const sort = document.getElementById("sortFilter").value;
+    const search = document.getElementById("searchInput").value.toLowerCase();
 
+    let filtered = [...players];
+
+    if (team !== "all") {
+        filtered = filtered.filter(p => p.team === team);
+    }
+
+    if (pos !== "all") {
+        filtered = filtered.filter(p => p.pos === pos);
+    }
+
+    if (search) {
+        filtered = filtered.filter(p =>
+            p.name.toLowerCase().includes(search)
+        );
+    }
+
+    if (sort === "price-asc") {
+        filtered.sort((a, b) => a.price - b.price);
+    }
+
+    if (sort === "price-desc") {
+        filtered.sort((a, b) => b.price - a.price);
+    }
+
+    if (sort === "name-asc") {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (sort === "rating-desc") {
+        filtered.sort((a, b) => b.rating - a.rating);
+    }
+
+    displayPlayers(filtered);
+}
+
+function getSizeStock(player, size) {
+    return Number(player?.stock || 0);
+}
+
+function getTotalStock(player) {
+    return Number(player?.stock || 0);
+}
+
+function updateCardStock(index) {
+    const player = window.currentSoccerItems[index];
+    if (!player) return;
+
+    const sizeContainer = document.getElementById(`size-${index}`);
+    const stockEl = document.getElementById(`stock-text-${index}`);
+    const addBtn = document.getElementById(`add-btn-${index}`);
+
+    if (!sizeContainer || !stockEl || !addBtn) return;
+
+    const activeSizeBtn = sizeContainer.querySelector(".size-btn.active");
+    const selectedSize = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+
+    const selectedStock = getSizeStock(player, selectedSize);
+    const totalStock = getTotalStock(player);
+
+    if (totalStock <= 0) {
+        stockEl.textContent = "";
+        stockEl.className = "stock-status";
+        addBtn.textContent = "Unavailable";
+        addBtn.disabled = true;
+        return;
+    }
+
+    if (selectedStock > 0) {
+        stockEl.textContent = `In Stock (${selectedStock} left)`;
+        stockEl.className = "stock-status in-stock";
+        addBtn.textContent = "Add to Cart";
+        addBtn.disabled = false;
+    } else {
+        stockEl.textContent = "Out of Stock";
+        stockEl.className = "stock-status out-stock";
+        addBtn.textContent = "Add to Cart";
+        addBtn.disabled = false;
+    }
+}
+
+function init() {
+    populateTeams();
+    displayPlayers(players);
+
+    document.getElementById("teamFilter").addEventListener("change", applyFilters);
+    document.getElementById("posFilter").addEventListener("change", applyFilters);
+    document.getElementById("sortFilter").addEventListener("change", applyFilters);
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
+}
+
+function displayPlayers(items) {
+    const grid = document.getElementById("player-grid");
+    const resultsCount = document.getElementById("resultsCount");
+
+    resultsCount.textContent = `${items.length} products found`;
+
+    window.currentSoccerItems = items;
+
+    grid.innerHTML = items.map((player, index) => {
+        const totalStock = getTotalStock(player);
+        const initialSize = "M";
+        const initialStock = getSizeStock(player, initialSize);
+
+        let stockText = "";
+        let stockClass = "";
+        let buttonText = "";
+        let buttonDisabled = "";
+
+        if (totalStock <= 0) {
+            stockText = "";
+            stockClass = "";
+            buttonText = "Unavailable";
+            buttonDisabled = "disabled";
+        } else if (initialStock > 0) {
+            stockText = `In Stock (${initialStock} left)`;
+            stockClass = "in-stock";
+            buttonText = "Add to Cart";
+            buttonDisabled = "";
+        } else {
+            stockText = "Out of Stock";
+            stockClass = "out-stock";
+            buttonText = "Add to Cart";
+            buttonDisabled = "";
+        }
+
+        return `
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="card h-100">
+                    <div class="card-img-wrap">
+                        <img class="card-img-top" src="${player.img}" alt="${player.name}">
+                    </div>
+
+                    <div class="card-body">
+                        <div class="team-badge">${player.team}</div>
+
+                        <h3 class="player-name">${player.name}</h3>
+
+                        <p class="player-pos">${player.country || ""} ${player.pos} · #${player.number}</p>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="price">$${player.price.toFixed(2)}</div>
+                            <div class="rating">★ ${player.rating}</div>
+                        </div>
+
+                        <p id="stock-text-${index}" class="stock-status ${stockClass}">
+                            ${stockText}
+                        </p>
+
+                        <div class="size-buttons mb-2" id="size-${index}">
+                            <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
+                            <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
+                            <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
+                            <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
+                        </div>
+
+                        <button id="add-btn-${index}" class="btn-add-cart"
+                            onclick="addFilteredSoccerToCart(${index})"
+                            ${buttonDisabled}>
+                            ${buttonText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function addFilteredSoccerToCart(index) {
+    const product = window.currentSoccerItems[index];
+    if (!product) return;
+
+    const sizeContainer = document.getElementById(`size-${index}`);
+    const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
+    const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+
+    const selectedStock = getSizeStock(product, size);
+    const totalStock = getTotalStock(product);
+
+    if (totalStock <= 0) {
+        showToast("This item is unavailable");
+        return;
+    }
+
+    if (selectedStock <= 0) {
+        showToast(`${size} is out of stock`);
+        updateCardStock(index);
+        return;
+    }
+
+    const item = {
+        ...product,
+        size: size
+    };
+
+    addToCart(item);
+}
+
+function selectSize(button, index) {
+    const container = button.parentElement;
+    container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
+    button.classList.add("active");
+    updateCardStock(index);
+}
+
+init();
 </script>
 
-
-<!-- CART SCRIPT -->
-
-<script src="../js/cart.js"></script>
-
+<script src="../database/cart.js"></script>
 </body>
 </html>

@@ -12,21 +12,20 @@
 
 <!-- Navbar -->
 <nav class="navbar">
-
   <a class="navbar-brand" href="../index.html">
     VINTAGE<span>SPORTS</span>
   </a>
 
-  <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
-  <span>👤 Login</span>
-  </button>
+  <div class="d-flex align-items-center gap-3" style="margin-left:auto;">
+    <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
+      <span>👤 Login</span>
+    </button>
 
     <button class="cart-btn" onclick="window.location.href='../cart.html'">
       <span>🛒 Cart</span>
       <span class="cart-badge" id="cart-count">0</span>
     </button>
   </div>
-
 </nav>
 
 <!-- Hero -->
@@ -116,32 +115,6 @@
 let players = window.STORE_DATA?.nba || [];
 let cart = [];
 
-function displayPlayers(items) {
-    const grid = document.getElementById("player-grid");
-    const resultsCount = document.getElementById("resultsCount");
-
-    resultsCount.textContent = `${items.length} products found`;
-
-    grid.innerHTML = items.map(player => `
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-            <div class="card h-100">
-                <div class="card-img-wrap">
-                    <img class="card-img-top" src="${player.img}" alt="${player.name}">
-                </div>
-                <div class="card-body">
-                    <div class="team-badge">${player.team}</div>
-                    <h3 class="player-name">${player.name}</h3>
-                    <p class="player-pos">${player.pos} · #${player.number}</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="price">$${player.price.toFixed(2)}</div>
-                        <div class="rating">★ ${player.rating}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join("");
-}
-
 function populateTeams() {
     const teamFilter = document.getElementById("teamFilter");
     const teams = [...new Set(players.map(p => p.team))].sort();
@@ -162,16 +135,75 @@ function applyFilters() {
 
     let filtered = [...players];
 
-    if (team !== "all") filtered = filtered.filter(p => p.team === team);
-    if (pos !== "all") filtered = filtered.filter(p => p.pos === pos);
-    if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+    if (team !== "all")
+        filtered = filtered.filter(p => p.team === team);
 
-    if (sort === "price-asc") filtered.sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") filtered.sort((a, b) => b.price - a.price);
-    if (sort === "name-asc") filtered.sort((a, b) => a.name.localeCompare(b.name));
-    if (sort === "rating-desc") filtered.sort((a, b) => b.rating - a.rating);
+    if (pos !== "all")
+        filtered = filtered.filter(p => p.pos === pos);
+
+    if (search)
+        filtered = filtered.filter(p =>
+            p.name.toLowerCase().includes(search)
+        );
+
+    if (sort === "price-asc")
+        filtered.sort((a,b)=>a.price-b.price);
+
+    if (sort === "price-desc")
+        filtered.sort((a,b)=>b.price-a.price);
+
+    if (sort === "name-asc")
+        filtered.sort((a,b)=>a.name.localeCompare(b.name));
+
+    if (sort === "rating-desc")
+        filtered.sort((a,b)=>b.rating-a.rating);
 
     displayPlayers(filtered);
+}
+
+function getSizeStock(player, size) {
+    return Number(player?.stock || 0);
+}
+
+function getTotalStock(player) {
+    return Number(player?.stock || 0);
+}
+
+function updateCardStock(index) {
+    const player = window.currentBasketballItems[index];
+    if (!player) return;
+
+    const sizeContainer = document.getElementById(`size-${index}`);
+    const stockEl = document.getElementById(`stock-text-${index}`);
+    const addBtn = document.getElementById(`add-btn-${index}`);
+
+    if (!sizeContainer || !stockEl || !addBtn) return;
+
+    const activeSizeBtn = sizeContainer.querySelector(".size-btn.active");
+    const selectedSize = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+
+    const selectedStock = getSizeStock(player, selectedSize);
+    const totalStock = getTotalStock(player);
+
+    if (totalStock <= 0) {
+        stockEl.textContent = "";
+        stockEl.className = "stock-status";
+        addBtn.textContent = "Unavailable";
+        addBtn.disabled = true;
+        return;
+    }
+
+    if (selectedStock > 0) {
+        stockEl.textContent = `In Stock (${selectedStock} left)`;
+        stockEl.className = "stock-status in-stock";
+        addBtn.textContent = "Add to Cart";
+        addBtn.disabled = false;
+    } else {
+        stockEl.textContent = "Out of Stock";
+        stockEl.className = "stock-status out-stock";
+        addBtn.textContent = "Add to Cart";
+        addBtn.disabled = false;
+    }
 }
 
 function init() {
@@ -184,39 +216,125 @@ function init() {
     document.getElementById("searchInput").addEventListener("input", applyFilters);
 }
 
-init();
-
 function displayPlayers(items) {
   const grid = document.getElementById("player-grid");
-  grid.innerHTML = items.map((player, index) => `
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-      <div class="card h-100">
-        <div class="card-img-wrap">
-          <img class="card-img-top" src="${player.img}" alt="${player.name}">
-        </div>
-        <div class="card-body">
-          <div class="team-badge">${player.team}</div>
-          <h3 class="player-name">${player.name}</h3>
-          <p class="player-pos">${player.pos} · #${player.number}</p>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="price">$${player.price.toFixed(2)}</div>
-            <div class="rating">★ ${player.rating}</div>
-          </div>
-          <button class="btn-add-cart" onclick="addFilteredBasketballToCart(${index})">
-            Add to Cart
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join("");
+  const resultsCount = document.getElementById("resultsCount");
+
+  resultsCount.textContent = `${items.length} products found`;
 
   window.currentBasketballItems = items;
+
+  grid.innerHTML = items.map((player, index) => {
+    const totalStock = getTotalStock(player);
+    const initialSize = "M";
+    const initialStock = getSizeStock(player, initialSize);
+
+    let stockText = "";
+    let stockClass = "";
+    let buttonText = "";
+    let buttonDisabled = "";
+
+    if (totalStock <= 0) {
+      stockText = "";
+      stockClass = "";
+      buttonText = "Unavailable";
+      buttonDisabled = "disabled";
+    } else if (initialStock > 0) {
+      stockText = `In Stock (${initialStock} left)`;
+      stockClass = "in-stock";
+      buttonText = "Add to Cart";
+      buttonDisabled = "";
+    } else {
+      stockText = "Out of Stock";
+      stockClass = "out-stock";
+      buttonText = "Add to Cart";
+      buttonDisabled = "";
+    }
+
+    return `
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card h-100">
+          <div class="card-img-wrap">
+            <img class="card-img-top"
+              src="${player.img}"
+              alt="${player.name}">
+          </div>
+
+          <div class="card-body">
+            <div class="team-badge">${player.team}</div>
+
+            <h3 class="player-name">${player.name}</h3>
+
+            <p class="player-pos">${player.pos} · #${player.number}</p>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="price">$${player.price.toFixed(2)}</div>
+              <div class="rating">★ ${player.rating}</div>
+            </div>
+
+            <p id="stock-text-${index}" class="stock-status ${stockClass}">
+              ${stockText}
+            </p>
+
+            <div class="size-buttons mb-2" id="size-${index}">
+              <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
+              <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
+              <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
+              <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
+            </div>
+
+            <button id="add-btn-${index}" class="btn-add-cart"
+              onclick="addFilteredBasketballToCart(${index})"
+              ${buttonDisabled}>
+              ${buttonText}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function addFilteredBasketballToCart(index) {
   const product = window.currentBasketballItems[index];
-  addToCart(product);
+  if (!product) return;
+
+  const sizeContainer = document.getElementById(`size-${index}`);
+  const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
+  const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+
+  const selectedStock = getSizeStock(product, size);
+  const totalStock = getTotalStock(product);
+
+  if (totalStock <= 0) {
+    showToast("This item is unavailable");
+    return;
+  }
+
+  if (selectedStock <= 0) {
+    showToast(`${size} is out of stock`);
+    updateCardStock(index);
+    return;
+  }
+
+  const item = {
+    ...product,
+    size: size
+  };
+
+  addToCart(item);
 }
 
+function selectSize(button, index) {
+  const container = button.parentElement;
+  container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
+  button.classList.add("active");
+  updateCardStock(index);
+}
+
+init();
 </script>
+
 <script src="../database/cart.js"></script>
+</body>
+</html>

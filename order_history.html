@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order History | Vintage Sports Vault</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="index.html">VINTAGE<span>SPORTS</span></a>
+
+  <div class="nav-actions">
+    <a href="index.html" class="cart-btn" style="text-decoration:none;">Home</a>
+  </div>
+</nav>
+
+<header class="nba-hero">
+  <div class="container text-center">
+    <div class="hero-title">ORDER <span>HISTORY</span></div>
+    <p class="hero-sub">View your previous purchases</p>
+    <div class="hero-divider"></div>
+  </div>
+</header>
+
+<main class="container" style="max-width: 1000px; margin-top: 40px; margin-bottom: 70px;">
+  <div class="filters-bar p-4">
+    <h3 style="margin-bottom: 20px;">Your Orders</h3>
+    <div id="orders-container"></div>
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2026 Vintage Sports Vault | All Rights Reserved</p>
+</footer>
+
+<script>
+  async function loadOrderHistory() {
+    const currentUser = JSON.parse(localStorage.getItem("vsv_current_user"));
+    const container = document.getElementById("orders-container");
+
+    if (!currentUser || !currentUser.email) {
+      container.innerHTML = `
+        <p style="color:#fff;">You must be logged in to view order history.</p>
+      `;
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/orders/user/${encodeURIComponent(currentUser.email)}`);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to load orders.");
+      }
+
+      const orders = result.orders || [];
+
+      if (!orders.length) {
+        container.innerHTML = `
+          <p style="color:#fff;">No previous orders found.</p>
+        `;
+        return;
+      }
+
+      container.innerHTML = orders.map(order => `
+        <div class="filters-bar p-4" style="margin-top: 20px;">
+          <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+              <h4 style="margin:0; color:#fff;">Order ${order.orderNumber}</h4>
+              <p style="margin:4px 0 0; color:#aaa;">
+                ${new Date(order.createdAt).toLocaleString()}
+              </p>
+            </div>
+            <div style="text-align:right;">
+              <p style="margin:0; color:#fff;"><strong>Status:</strong> ${order.status}</p>
+              <p style="margin:4px 0 0; color:#fff;"><strong>Total:</strong> $${Number(order.total).toFixed(2)}</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table" style="color:#fff;">
+              <thead>
+                <tr>
+                  <th style="color:#fff;">Item</th>
+                  <th style="color:#fff;">Qty</th>
+                  <th style="color:#fff;">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.items.map(item => `
+                  <tr>
+                    <td style="color:#fff;">${item.name}</td>
+                    <td style="color:#fff;">${item.quantity}</td>
+                    <td style="color:#fff;">$${Number(item.price).toFixed(2)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <p style="margin-top: 12px; color:#fff;">
+            <strong>Shipping Address:</strong> ${order.address}
+          </p>
+        </div>
+      `).join("");
+    } catch (error) {
+      console.error("Order history error:", error);
+      container.innerHTML = `
+        <p style="color:#ff8f8f;">Error loading order history: ${error.message}</p>
+      `;
+    }
+  }
+
+  loadOrderHistory();
+</script>
+
+</body>
+</html>

@@ -68,20 +68,32 @@
           body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
+        const text = await response.text();
+
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (err) {
+          throw new Error("Server did not return JSON. Response was: " + text);
+        }
 
         if (!response.ok || !result.success) {
           throw new Error(result.message || "Login failed.");
         }
 
         localStorage.setItem("vsv_current_user", JSON.stringify(result.user));
-        alert("Login successful!");
-        window.location.href = "index.html";
+
+        if (result.user.role === "admin") {
+          window.location.href = "admin/admin_dashboard.html";
+        } else {
+          window.location.href = "index.html";
+        }
       } catch (error) {
         console.error("Login error:", error);
-        alert(error.message);
+        alert("Login error: " + error.message);
       }
     });
   </script>
+
 </body>
 </html>

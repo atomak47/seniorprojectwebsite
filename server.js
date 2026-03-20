@@ -4,18 +4,16 @@ const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-require("dotenv").config();
-
+const Order = require("./models/Order");
+const Product = require("./models/product");
 const User = require("./models/User");
+require("dotenv").config();
 
 const app = express();
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
-// Middleware
+/* =========================
+   MIDDLEWARE
+========================= */
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,7 +21,9 @@ app.use(express.urlencoded({ extended: true }));
 // Serve frontend files
 app.use(express.static(path.join(__dirname)));
 
-// Gmail transporter
+/* =========================
+   EMAIL TRANSPORTER
+========================= */
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -49,14 +49,6 @@ app.get("/api/test", (req, res) => {
 app.post("/api/register", async (req, res) => {
   try {
     console.log("REGISTER HIT:", req.body);
-    console.log("Mongo readyState:", mongoose.connection.readyState);
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(500).json({
-        success: false,
-        message: "Database is not connected."
-      });
-    }
 
     const { username, email, password } = req.body;
 
@@ -72,10 +64,7 @@ app.post("/api/register", async (req, res) => {
     const cleanPassword = password.trim();
 
     const existingUser = await User.findOne({
-      $or: [
-        { username: cleanUsername },
-        { email: cleanEmail }
-      ]
+      $or: [{ username: cleanUsername }, { email: cleanEmail }]
     });
 
     if (existingUser) {
@@ -90,12 +79,13 @@ app.post("/api/register", async (req, res) => {
     const newUser = new User({
       username: cleanUsername,
       email: cleanEmail,
-      password: hashedPassword
+      password: hashedPassword,
+      role: "user"
     });
 
     await newUser.save();
 
-    return res.json({
+    return res.status(201).json({
       success: true,
       message: "Account created successfully."
     });
@@ -114,14 +104,6 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     console.log("LOGIN HIT:", req.body);
-    console.log("Mongo readyState:", mongoose.connection.readyState);
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(500).json({
-        success: false,
-        message: "Database is not connected."
-      });
-    }
 
     const { username, password } = req.body;
 
@@ -159,7 +141,8 @@ app.post("/api/login", async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error) {
@@ -189,13 +172,35 @@ app.post("/api/checkout", async (req, res) => {
 
     const orderNumber = `VSV-${Date.now()}`;
 
-    const itemsHtml = cart.map((item) => `
+    // Save order to MongoDB
+    const order = new Order({
+      orderNumber,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      address: address.trim(),
+      items: cart.map((item) => ({
+        productId: item.id || "",
+        name: item.name || "Unnamed Product",
+        price: Number(item.price || 0),
+        quantity: Number(item.quantity || 1)
+      })),
+      total: Number(total || 0),
+      status: "Pending"
+    });
+
+    await order.save();
+
+    const itemsHtml = cart
+      .map(
+        (item) => `
       <tr>
         <td style="padding:8px;border:1px solid #ddd;">${item.name}</td>
         <td style="padding:8px;border:1px solid #ddd;">${item.quantity || 1}</td>
         <td style="padding:8px;border:1px solid #ddd;">$${Number(item.price || 0).toFixed(2)}</td>
       </tr>
-    `).join("");
+    `
+      )
+      .join("");
 
     const customerMail = {
       from: `"Vintage Sports Vault" <${process.env.EMAIL_USER}>`,
@@ -254,24 +259,189 @@ app.post("/api/checkout", async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Order placed and confirmation email sent.",
+      message: "Order placed and saved successfully.",
       orderNumber
     });
   } catch (error) {
-    console.error("Checkout email error:", error);
+    console.error("Checkout error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to send confirmation email."
+      message: error.message || "Failed to process checkout."
     });
   }
 });
 
-// Catch-all route
-app.get("/{*splat}", (req, res) => {
+/* =========================
+   PRODUCTS ROUTES
+========================= */
+
+// Get all products
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      products
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch products."
+    });
+  }
+});
+
+// Add new product
+app.post("/api/products", async (req, res) => {
+  try {
+    const { name, team, category, type, price, stock, image, description } = req.body;
+
+    if (!name || !category || price === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, category, and price are required."
+      });
+    }
+
+    const product = new Product({
+      name: name.trim(),
+      team: (team || "N/A").trim(),
+      category: category.trim(),
+      type: (type || "N/A").trim(),
+      price: Number(price),
+      stock: Number(stock ?? 10),
+      image: (image || "").trim(),
+      description: (description || "").trim()
+    });
+
+    await product.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Product created successfully.",
+      product
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create product."
+    });
+  }
+});
+
+// Update product
+app.put("/api/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, team, category, type, price, stock, image, description } = req.body;
+
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      {
+        name: name?.trim(),
+        team: team?.trim(),
+        category: category?.trim(),
+        type: type?.trim(),
+        price: Number(price),
+        stock: Number(stock),
+        image: image?.trim(),
+        description: description?.trim()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Product updated successfully.",
+      product: updated
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update product."
+    });
+  }
+});
+
+// Delete product
+app.delete("/api/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Product.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Product deleted successfully."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete product."
+    });
+  }
+});
+
+/* =========================
+   USER ORDER HISTORY ROUTE
+========================= */
+app.get("/api/orders/user/:email", async (req, res) => {
+  try {
+    const email = req.params.email.trim().toLowerCase();
+
+    const orders = await Order.find({ email }).sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      orders
+    });
+  } catch (error) {
+    console.error("Order history error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch order history."
+    });
+  }
+});
+
+
+/* =========================
+   FRONTEND FALLBACK
+========================= */
+// Keep this AFTER all API routes
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+/* =========================
+   START SERVER AFTER DB CONNECTS
+========================= */
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MongoDB connected");
+
+    app.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Vintage Sports Vault</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<script>
+  const currentUser = JSON.parse(localStorage.getItem("vsv_current_user"));
+  if (!currentUser || currentUser.role !== "admin") {
+    window.location.href = "../login.html";
+  }
+</script>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="../index.html">VINTAGE<span>SPORTS</span></a>
+  <div class="nav-actions">
+    <button id="logout-btn" class="cart-btn" type="button">Logout</button>
+  </div>
+</nav>
+
+<header class="nba-hero">
+  <div class="container text-center">
+    <div class="hero-title">ADMIN <span>DASHBOARD</span></div>
+    <p class="hero-sub">Manage products and inventory</p>
+    <div class="hero-divider"></div>
+  </div>
+</header>
+
+<main class="container" style="margin-top: 40px; margin-bottom: 70px;">
+
+  <div class="row g-4 admin-stats-row">
+    <div class="col-md-4">
+      <div class="admin-stat-card">
+        <p class="admin-stat-label">Total Products</p>
+        <h2 id="total-products" class="admin-stat-value">0</h2>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="admin-stat-card">
+        <p class="admin-stat-label">Low Stock</p>
+        <h2 id="low-stock-products" class="admin-stat-value">0</h2>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="admin-stat-card">
+        <p class="admin-stat-label">Out of Stock</p>
+        <h2 id="out-stock-products" class="admin-stat-value">0</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-section-card">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Add Product</h2>
+    </div>
+
+    <form id="add-product-form" class="admin-form-grid">
+      <div>
+        <label class="admin-label">Name</label>
+        <input type="text" id="name" class="form-control" required>
+      </div>
+
+      <div>
+        <label class="admin-label">Team</label>
+        <input type="text" id="team" class="form-control">
+      </div>
+
+      <div>
+        <label class="admin-label">Category</label>
+        <select id="category" class="form-select" required>
+          <option value="NBA">NBA</option>
+          <option value="Hockey">Hockey</option>
+          <option value="Soccer">Soccer</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="admin-label">Type</label>
+        <input type="text" id="type" class="form-control" placeholder="Jersey, Hat, PG, SG...">
+      </div>
+
+      <div>
+        <label class="admin-label">Price</label>
+        <input type="number" id="price" class="form-control" step="0.01" required>
+      </div>
+
+      <div>
+        <label class="admin-label">Stock</label>
+        <input type="number" id="stock" class="form-control" value="10" required>
+      </div>
+
+      <div class="full-width">
+        <label class="admin-label">Image URL</label>
+        <input type="text" id="image" class="form-control">
+      </div>
+
+      <div class="full-width">
+        <label class="admin-label">Description</label>
+        <textarea id="description" class="form-control" rows="3"></textarea>
+      </div>
+
+      <div class="full-width">
+        <button type="submit" class="btn-add-cart">Add Product</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="admin-section-card">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Inventory</h2>
+      <div class="admin-toolbar">
+        <div class="admin-search">
+          <input type="text" id="search-input" class="form-control" placeholder="Search products...">
+        </div>
+        <button id="refresh-btn" class="btn-add-cart" type="button">Refresh</button>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Vintage Sports Vault</p>
+</footer>
+
+<script>
+  let allProducts = [];
+
+  async function fetchProducts() {
+    const res = await fetch("/api/products");
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to load products.");
+    }
+
+    allProducts = data.products;
+    renderProducts();
+  }
+
+  function renderProducts(filter = "") {
+    const tbody = document.getElementById("inventory-table");
+
+    const filtered = allProducts.filter(product =>
+      product.name.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    document.getElementById("total-products").textContent = allProducts.length;
+    document.getElementById("low-stock-products").textContent =
+      allProducts.filter(p => p.stock > 0 && p.stock <= 5).length;
+    document.getElementById("out-stock-products").textContent =
+      allProducts.filter(p => p.stock === 0).length;
+
+    if (!filtered.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="admin-empty-state">No products found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(product => {
+      const stockClass =
+        product.stock === 0 ? "admin-stock-badge out" :
+        product.stock <= 5 ? "admin-stock-badge low" :
+        "admin-stock-badge";
+
+      return `
+        <tr>
+          <td>
+            <div class="admin-product-cell">
+              <img
+                src="${product.image || 'https://via.placeholder.com/60'}"
+                alt="${product.name}"
+                class="admin-product-thumb"
+              >
+              <div>
+                <p class="admin-product-name">${product.name}</p>
+                <p class="admin-product-meta">${product.team || "N/A"}</p>
+              </div>
+            </div>
+          </td>
+          <td><span class="admin-category-badge">${product.category}</span></td>
+          <td>${product.type || "N/A"}</td>
+          <td><span class="admin-price">$${Number(product.price).toFixed(2)}</span></td>
+          <td><span class="${stockClass}">${product.stock}</span></td>
+          <td>
+            <div class="admin-actions">
+              <button class="admin-btn-sm danger" onclick="deleteProduct('${product._id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm("Delete this product?")) return;
+
+    const res = await fetch(`/api/products/${id}`, {
+      method: "DELETE"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Delete failed.");
+      return;
+    }
+
+    await fetchProducts();
+  }
+
+  document.getElementById("add-product-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const payload = {
+      name: document.getElementById("name").value.trim(),
+      team: document.getElementById("team").value.trim(),
+      category: document.getElementById("category").value,
+      type: document.getElementById("type").value.trim(),
+      price: Number(document.getElementById("price").value),
+      stock: Number(document.getElementById("stock").value),
+      image: document.getElementById("image").value.trim(),
+      description: document.getElementById("description").value.trim()
+    };
+
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Failed to add product.");
+      return;
+    }
+
+    this.reset();
+    document.getElementById("stock").value = 10;
+    await fetchProducts();
+  });
+
+  document.getElementById("search-input").addEventListener("input", function (e) {
+    renderProducts(e.target.value);
+  });
+
+  document.getElementById("refresh-btn").addEventListener("click", function () {
+    fetchProducts();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", function () {
+    localStorage.removeItem("vsv_current_user");
+    window.location.href = "../login.html";
+  });
+
+  fetchProducts().catch(err => {
+    console.error(err);
+    alert(err.message);
+  });
+</script>
+
+</body>
+</html>
