@@ -6,48 +6,67 @@ function saveCart(cart) {
   localStorage.setItem("vsv_cart", JSON.stringify(cart));
 }
 
+function getItemSizeStock(item) {
+  const size = item.size || "M";
+  return Number(item?.sizes?.[size] ?? 0);
+}
+
 function addToCart(product) {
-  if (!product || Number(product.stock || 0) <= 0) {
-    showToast("This item is out of stock");
+  const productId = product.id || product._id;
+  const size = product.size || "M";
+  const sizeStock = Number(product?.sizes?.[size] ?? 0);
+
+  if (!product || !productId) {
+    showToast("Invalid product");
+    return;
+  }
+
+  if (sizeStock <= 0) {
+    showToast(`${size} is out of stock`);
     return;
   }
 
   const cart = getCart();
-  const existing = cart.find(item => item.id === product.id);
+
+  const existing = cart.find(
+    item => (item.id === productId || item._id === productId) && item.size === size
+  );
 
   if (existing) {
-    if (existing.quantity >= Number(product.stock || 0)) {
-      showToast(`Only ${product.stock} left in stock`);
+    if (existing.quantity >= sizeStock) {
+      showToast(`Only ${sizeStock} left in stock for size ${size}`);
       return;
     }
     existing.quantity += 1;
   } else {
     cart.push({
       ...product,
+      id: productId,
+      size,
       quantity: 1
     });
   }
 
   saveCart(cart);
   updateCartCount();
-  showToast(`${product.name} added to cart`);
+  showToast(`${product.name} (${size}) added to cart`);
 }
 
-function increaseQuantity(productId) {
+function increaseQuantity(productId, size) {
   const cart = getCart();
-  const item = cart.find(item => item.id === productId);
+  const item = cart.find(item => item.id === productId && item.size === size);
 
   if (!item) return;
 
-  const maxStock = Number(item.stock || 0);
+  const maxStock = getItemSizeStock(item);
 
   if (maxStock <= 0) {
-    showToast("This item is out of stock");
+    showToast(`${size} is out of stock`);
     return;
   }
 
   if (item.quantity >= maxStock) {
-    showToast(`Only ${maxStock} left in stock`);
+    showToast(`Only ${maxStock} left in stock for size ${size}`);
     return;
   }
 
@@ -57,16 +76,16 @@ function increaseQuantity(productId) {
   renderCartPage();
 }
 
-function decreaseQuantity(productId) {
+function decreaseQuantity(productId, size) {
   let cart = getCart();
-  const item = cart.find(item => item.id === productId);
+  const item = cart.find(item => item.id === productId && item.size === size);
 
   if (!item) return;
 
   item.quantity -= 1;
 
   if (item.quantity <= 0) {
-    cart = cart.filter(item => item.id !== productId);
+    cart = cart.filter(item => !(item.id === productId && item.size === size));
   }
 
   saveCart(cart);
@@ -74,8 +93,8 @@ function decreaseQuantity(productId) {
   renderCartPage();
 }
 
-function removeFromCart(productId) {
-  const cart = getCart().filter(item => item.id !== productId);
+function removeFromCart(productId, size) {
+  const cart = getCart().filter(item => !(item.id === productId && item.size === size));
   saveCart(cart);
   updateCartCount();
   renderCartPage();
@@ -141,43 +160,52 @@ function renderCartPage() {
 
   if (emptyEl) emptyEl.style.display = "none";
 
-  cartContainer.innerHTML = cart.map(item => `
-    <div class="cart-page-item">
-      <div class="cart-page-img-wrap">
-        <img
-          src="${item.image || item.img || 'https://via.placeholder.com/140x140?text=No+Image'}"
-          alt="${item.name}"
-          class="cart-page-img"
-        >
-      </div>
+  cartContainer.innerHTML = cart.map(item => {
+    const sizeStock = getItemSizeStock(item);
+    const stockClass = sizeStock > 0 ? "in-stock" : "out-stock";
+    const stockText = sizeStock > 0
+      ? `${item.size || "M"} In Stock (${sizeStock} left)`
+      : `${item.size || "M"} Out of Stock`;
 
-      <div class="cart-page-details">
-        <h3>${item.name}</h3>
-        <p>${item.team || ""}</p>
-        <p>${item.type || item.pos || ""}${item.era ? " · " + item.era : ""}</p>
-        <p class="stock-status ${Number(item.stock || 0) > 0 ? 'in-stock' : 'out-stock'}">
-          ${Number(item.stock || 0) > 0 ? `In Stock (${item.stock} left)` : "Out of Stock"}
-        </p>
-        <div class="cart-page-price">$${Number(item.price || 0).toFixed(2)}</div>
-      </div>
-
-      <div class="cart-page-actions">
-        <div class="qty-controls">
-          <button type="button" class="qty-btn decrease-btn" data-id="${item.id}">−</button>
-          <span>${item.quantity}</span>
-          <button type="button" class="qty-btn increase-btn" data-id="${item.id}">+</button>
+    return `
+      <div class="cart-page-item">
+        <div class="cart-page-img-wrap">
+          <img
+            src="${item.image || item.img || 'https://via.placeholder.com/140x140?text=No+Image'}"
+            alt="${item.name}"
+            class="cart-page-img"
+          >
         </div>
 
-        <div class="line-total">
-          $${(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
+        <div class="cart-page-details">
+          <h3>${item.name}</h3>
+          <p>${item.team || ""}</p>
+          <p>${item.type || item.pos || ""}${item.era ? " · " + item.era : ""}</p>
+          <p>Size: ${item.size || "M"}</p>
+          <p class="stock-status ${stockClass}">
+            ${stockText}
+          </p>
+          <div class="cart-page-price">$${Number(item.price || 0).toFixed(2)}</div>
         </div>
 
-        <button type="button" class="remove-btn" data-id="${item.id}">
-          Remove
-        </button>
+        <div class="cart-page-actions">
+          <div class="qty-controls">
+            <button type="button" class="qty-btn decrease-btn" data-id="${item.id}" data-size="${item.size || "M"}">−</button>
+            <span>${item.quantity}</span>
+            <button type="button" class="qty-btn increase-btn" data-id="${item.id}" data-size="${item.size || "M"}">+</button>
+          </div>
+
+          <div class="line-total">
+            $${(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
+          </div>
+
+          <button type="button" class="remove-btn" data-id="${item.id}" data-size="${item.size || "M"}">
+            Remove
+          </button>
+        </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   const total = getCartTotal().toFixed(2);
   if (subtotalEl) subtotalEl.textContent = `$${total}`;
@@ -187,19 +215,19 @@ function renderCartPage() {
 document.addEventListener("click", function (e) {
   const increaseBtn = e.target.closest(".increase-btn");
   if (increaseBtn) {
-    increaseQuantity(increaseBtn.dataset.id);
+    increaseQuantity(increaseBtn.dataset.id, increaseBtn.dataset.size);
     return;
   }
 
   const decreaseBtn = e.target.closest(".decrease-btn");
   if (decreaseBtn) {
-    decreaseQuantity(decreaseBtn.dataset.id);
+    decreaseQuantity(decreaseBtn.dataset.id, decreaseBtn.dataset.size);
     return;
   }
 
   const removeBtn = e.target.closest(".remove-btn");
   if (removeBtn) {
-    removeFromCart(removeBtn.dataset.id);
+    removeFromCart(removeBtn.dataset.id, removeBtn.dataset.size);
     return;
   }
 

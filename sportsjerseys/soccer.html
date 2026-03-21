@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greatest Soccer Jerseys of All Time — EliteSports</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soccer Jerseys | Vintage Sports Vault</title>
+
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -28,348 +29,364 @@
 
 <!-- Hero -->
 <header class="nba-hero">
-    <div class="container">
-        <div class="hero-title">TOP 30 <span>SOCCER</span> LEGENDS</div>
-        <p class="hero-sub">AUTHENTIC JERSEYS · THE 30 GREATEST PLAYERS IN SOCCER HISTORY</p>
-        <div class="hero-divider"></div>
-    </div>
+  <div class="container">
+    <div class="hero-title">SOCCER <span>JERSEYS</span></div>
+    <p class="hero-sub">Browse the full soccer collection</p>
+    <div class="hero-divider"></div>
+  </div>
 </header>
 
 <!-- Main -->
 <div class="container" style="max-width:1300px;">
-    <div class="filters-bar">
-        <div class="row g-3 align-items-end">
-            <div class="col-6 col-md-3">
-                <label>Team</label>
-                <select class="form-select" id="teamFilter">
-                    <option value="all">All Teams</option>
-                </select>
-            </div>
+  <div class="filters-bar">
+    <div class="row g-3 align-items-end">
+      <div class="col-6 col-md-3">
+        <label>Team</label>
+        <select class="form-select" id="teamFilter">
+          <option value="all">All Teams</option>
+        </select>
+      </div>
 
-            <div class="col-6 col-md-3">
-                <label>Position</label>
-                <select class="form-select" id="posFilter">
-                    <option value="all">All Positions</option>
-                    <option value="GK">GK</option>
-                    <option value="CB">CB</option>
-                    <option value="LB">LB</option>
-                    <option value="RB">RB</option>
-                    <option value="CDM">CDM</option>
-                    <option value="CM">CM</option>
-                    <option value="CAM">CAM</option>
-                    <option value="LM">LM</option>
-                    <option value="RM">RM</option>
-                    <option value="LW">LW</option>
-                    <option value="RW">RW</option>
-                    <option value="ST">ST</option>
-                    <option value="CF">CF</option>
-                </select>
-            </div>
+      <div class="col-6 col-md-3">
+        <label>Position</label>
+        <select class="form-select" id="posFilter">
+          <option value="all">All Positions</option>
+          <option value="GK">GK</option>
+          <option value="CB">CB</option>
+          <option value="LB">LB</option>
+          <option value="RB">RB</option>
+          <option value="CDM">CDM</option>
+          <option value="CM">CM</option>
+          <option value="CAM">CAM</option>
+          <option value="LM">LM</option>
+          <option value="RM">RM</option>
+          <option value="LW">LW</option>
+          <option value="RW">RW</option>
+          <option value="ST">ST</option>
+          <option value="CF">CF</option>
+        </select>
+      </div>
 
-            <div class="col-6 col-md-3">
-                <label>Sort By</label>
-                <select class="form-select" id="sortFilter">
-                    <option value="default">Featured</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="name-asc">Name: A–Z</option>
-                    <option value="rating-desc">Highest Rated</option>
-                </select>
-            </div>
+      <div class="col-6 col-md-3">
+        <label>Sort By</label>
+        <select class="form-select" id="sortFilter">
+          <option value="default">Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name-asc">Name: A–Z</option>
+          <option value="team-asc">Team: A–Z</option>
+          <option value="rating-desc">Highest Rated</option>
+        </select>
+      </div>
 
-            <div class="col-6 col-md-3">
-                <label>Search</label>
-                <input type="text" class="form-control" id="searchInput" placeholder="Player name...">
-            </div>
-        </div>
+      <div class="col-6 col-md-3">
+        <label>Search</label>
+        <input type="text" class="form-control" id="searchInput" placeholder="Search player or team...">
+      </div>
     </div>
+  </div>
 
-    <div class="results-count" id="resultsCount"></div>
-    <div id="player-grid" class="row g-4"></div>
+  <div class="results-count" id="resultsCount"></div>
+  <div id="player-grid" class="row g-4"></div>
 </div>
 
 <!-- Footer -->
-<footer>© 2026 EliteSports — Soccer Jersey Shop · Senior Project Portfolio</footer>
+<footer>
+  <p>&copy; 2026 Vintage Sports Vault | All Rights Reserved</p>
+</footer>
 
-<!-- Cart Overlay -->
-<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-
-<!-- Cart Sidebar -->
-<div class="cart-sidebar" id="cartSidebar">
-    <div class="cart-header">
-        <h5>🛒 Your Cart</h5>
-        <button class="btn-close-cart" onclick="toggleCart()">✕</button>
-    </div>
-    <div class="cart-items" id="cartItemsList">
-        <div class="cart-empty">
-            <div class="empty-icon">⚽</div>
-            <p>Your cart is empty.<br>Add some jerseys!</p>
-        </div>
-    </div>
-    <div class="cart-footer">
-        <div class="cart-subtotal">
-            <span>Subtotal</span>
-            <span class="amount" id="cartTotal">$0.00</span>
-        </div>
-        <button class="btn-checkout" onclick="checkout()">Proceed to Checkout →</button>
-    </div>
-</div>
-
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
-
-<script src="../database/data.js"></script>
 <script>
-let players = window.STORE_DATA?.soccer || [];
-let cart = [];
+let players = [];
 
 function populateTeams() {
-    const teamFilter = document.getElementById("teamFilter");
-    const teams = [...new Set(players.map(p => p.team))].sort();
+  const teamFilter = document.getElementById("teamFilter");
+  teamFilter.innerHTML = `<option value="all">All Teams</option>`;
 
-    teams.forEach(team => {
-        const option = document.createElement("option");
-        option.value = team;
-        option.textContent = team;
-        teamFilter.appendChild(option);
-    });
+  const teams = [...new Set(players.map(p => p.team).filter(Boolean))].sort();
+
+  teams.forEach(team => {
+    const option = document.createElement("option");
+    option.value = team;
+    option.textContent = team;
+    teamFilter.appendChild(option);
+  });
 }
 
 function applyFilters() {
-    const team = document.getElementById("teamFilter").value;
-    const pos = document.getElementById("posFilter").value;
-    const sort = document.getElementById("sortFilter").value;
-    const search = document.getElementById("searchInput").value.toLowerCase();
+  const team = document.getElementById("teamFilter").value;
+  const pos = document.getElementById("posFilter").value;
+  const sort = document.getElementById("sortFilter").value;
+  const search = document.getElementById("searchInput").value.toLowerCase().trim();
 
-    let filtered = [...players];
+  let filtered = [...players];
 
-    if (team !== "all") {
-        filtered = filtered.filter(p => p.team === team);
-    }
+  if (team !== "all") {
+    filtered = filtered.filter(player => player.team === team);
+  }
 
-    if (pos !== "all") {
-        filtered = filtered.filter(p => p.pos === pos);
-    }
+  if (pos !== "all") {
+    filtered = filtered.filter(player => player.pos === pos);
+  }
 
-    if (search) {
-        filtered = filtered.filter(p =>
-            p.name.toLowerCase().includes(search)
-        );
-    }
+  if (search) {
+    filtered = filtered.filter(player =>
+      (player.name || "").toLowerCase().includes(search) ||
+      (player.team || "").toLowerCase().includes(search) ||
+      (player.pos || "").toLowerCase().includes(search) ||
+      (player.country || "").toLowerCase().includes(search)
+    );
+  }
 
-    if (sort === "price-asc") {
-        filtered.sort((a, b) => a.price - b.price);
-    }
+  if (sort === "price-asc") {
+    filtered.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+  }
 
-    if (sort === "price-desc") {
-        filtered.sort((a, b) => b.price - a.price);
-    }
+  if (sort === "price-desc") {
+    filtered.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+  }
 
-    if (sort === "name-asc") {
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-    }
+  if (sort === "name-asc") {
+    filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }
 
-    if (sort === "rating-desc") {
-        filtered.sort((a, b) => b.rating - a.rating);
-    }
+  if (sort === "team-asc") {
+    filtered.sort((a, b) => (a.team || "").localeCompare(b.team || ""));
+  }
 
-    displayPlayers(filtered);
+  if (sort === "rating-desc") {
+    filtered.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  }
+
+  displayPlayers(filtered);
 }
 
 function getSizeStock(player, size) {
-    return Number(player?.stock || 0);
+  return Number(player?.sizes?.[size] ?? 0);
 }
 
 function getTotalStock(player) {
-    return Number(player?.stock || 0);
+  const sizes = player?.sizes || {};
+  return Number(sizes.S || 0) + Number(sizes.M || 0) + Number(sizes.L || 0) + Number(sizes.XL || 0);
 }
 
 function updateCardStock(index) {
-    const player = window.currentSoccerItems[index];
-    if (!player) return;
+  const player = window.currentSoccerItems[index];
+  if (!player) return;
 
-    const sizeContainer = document.getElementById(`size-${index}`);
-    const stockEl = document.getElementById(`stock-text-${index}`);
-    const addBtn = document.getElementById(`add-btn-${index}`);
+  const sizeContainer = document.getElementById(`size-${index}`);
+  const stockEl = document.getElementById(`stock-text-${index}`);
+  const addBtn = document.getElementById(`add-btn-${index}`);
 
-    if (!sizeContainer || !stockEl || !addBtn) return;
+  if (!sizeContainer || !stockEl || !addBtn) return;
 
-    const activeSizeBtn = sizeContainer.querySelector(".size-btn.active");
-    const selectedSize = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+  const activeSizeBtn = sizeContainer.querySelector(".size-btn.active");
+  const selectedSize = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
 
-    const selectedStock = getSizeStock(player, selectedSize);
-    const totalStock = getTotalStock(player);
+  const selectedStock = getSizeStock(player, selectedSize);
+  const totalStock = getTotalStock(player);
 
-    if (totalStock <= 0) {
-        stockEl.textContent = "";
-        stockEl.className = "stock-status";
-        addBtn.textContent = "Unavailable";
-        addBtn.disabled = true;
-        return;
-    }
+  if (totalStock <= 0) {
+    stockEl.textContent = "";
+    stockEl.className = "stock-status";
+    addBtn.textContent = "Unavailable";
+    addBtn.disabled = true;
+    return;
+  }
 
-    if (selectedStock > 0) {
-        stockEl.textContent = `In Stock (${selectedStock} left)`;
-        stockEl.className = "stock-status in-stock";
-        addBtn.textContent = "Add to Cart";
-        addBtn.disabled = false;
-    } else {
-        stockEl.textContent = "Out of Stock";
-        stockEl.className = "stock-status out-stock";
-        addBtn.textContent = "Add to Cart";
-        addBtn.disabled = false;
-    }
+  if (selectedStock > 0) {
+    stockEl.textContent = `${selectedSize} In Stock (${selectedStock} left)`;
+    stockEl.className = "stock-status in-stock";
+    addBtn.textContent = "Add to Cart";
+    addBtn.disabled = false;
+  } else {
+    stockEl.textContent = `${selectedSize} Out of Stock`;
+    stockEl.className = "stock-status out-stock";
+    addBtn.textContent = "Add to Cart";
+    addBtn.disabled = false;
+  }
 }
 
 function displayPlayers(items) {
-    const grid = document.getElementById("player-grid");
-    const resultsCount = document.getElementById("resultsCount");
+  const grid = document.getElementById("player-grid");
+  const resultsCount = document.getElementById("resultsCount");
 
+  if (resultsCount) {
     resultsCount.textContent = `${items.length} products found`;
+  }
 
-    window.currentSoccerItems = items;
+  if (!Array.isArray(items) || items.length === 0) {
+    grid.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-warning">
+          No soccer products found.
+        </div>
+      </div>
+    `;
+    return;
+  }
 
-    grid.innerHTML = items.map((player, index) => {
-        const totalStock = getTotalStock(player);
-        const initialSize = "M";
-        const initialStock = getSizeStock(player, initialSize);
+  window.currentSoccerItems = items;
 
-        let stockText = "";
-        let stockClass = "";
-        let buttonText = "";
-        let buttonDisabled = "";
+  grid.innerHTML = items.map((player, index) => {
+    const totalStock = getTotalStock(player);
+    const initialSize = "M";
+    const initialStock = getSizeStock(player, initialSize);
 
-        if (totalStock <= 0) {
-            stockText = "";
-            stockClass = "";
-            buttonText = "Unavailable";
-            buttonDisabled = "disabled";
-        } else if (initialStock > 0) {
-            stockText = `In Stock (${initialStock} left)`;
-            stockClass = "in-stock";
-            buttonText = "Add to Cart";
-            buttonDisabled = "";
-        } else {
-            stockText = "Out of Stock";
-            stockClass = "out-stock";
-            buttonText = "Add to Cart";
-            buttonDisabled = "";
-        }
+    let stockText = "";
+    let stockClass = "";
+    let buttonText = "";
+    let buttonDisabled = "";
 
-        return `
-            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div class="card h-100">
-                    <div class="card-img-wrap">
-                        <img class="card-img-top" src="${player.img}" alt="${player.name}">
-                    </div>
+    if (totalStock <= 0) {
+      stockText = "";
+      stockClass = "";
+      buttonText = "Unavailable";
+      buttonDisabled = "disabled";
+    } else if (initialStock > 0) {
+      stockText = `${initialSize} In Stock (${initialStock} left)`;
+      stockClass = "in-stock";
+      buttonText = "Add to Cart";
+      buttonDisabled = "";
+    } else {
+      stockText = `${initialSize} Out of Stock`;
+      stockClass = "out-stock";
+      buttonText = "Add to Cart";
+      buttonDisabled = "";
+    }
 
-                    <div class="card-body">
-                        <div class="team-badge">${player.team}</div>
+    return `
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card h-100">
+          <div class="card-img-wrap">
+            <img
+              class="card-img-top"
+              src="${player.image || player.img || 'https://via.placeholder.com/400x300?text=No+Image'}"
+              alt="${player.name || 'Soccer Product'}"
+            >
+          </div>
 
-                        <h3 class="player-name">${player.name}</h3>
+          <div class="card-body">
+            <div class="team-badge">${player.team || 'Unknown Team'}</div>
+            <h3 class="player-name">${player.name || 'Unnamed Product'}</h3>
+            <p class="player-pos">${player.country || ''} ${player.pos || 'Soccer'}${player.number ? ` · #${player.number}` : ''}</p>
 
-                        <p class="player-pos">${player.country || ""} ${player.pos} · #${player.number}</p>
-
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="price">$${player.price.toFixed(2)}</div>
-                            <div class="rating">★ ${player.rating}</div>
-                        </div>
-
-                        <p id="stock-text-${index}" class="stock-status ${stockClass}">
-                            ${stockText}
-                        </p>
-
-                        <div class="size-buttons mb-2" id="size-${index}">
-                            <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
-                            <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
-                            <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
-                            <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
-                        </div>
-
-                        <button id="add-btn-${index}" class="btn-add-cart"
-                            onclick="addFilteredSoccerToCart(${index})"
-                            ${buttonDisabled}>
-                            ${buttonText}
-                        </button>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="price">$${Number(player.price || 0).toFixed(2)}</div>
+              <div class="rating">★ ${Number(player.rating || 0).toFixed(1)}</div>
             </div>
-        `;
-    }).join("");
+
+            <p id="stock-text-${index}" class="stock-status ${stockClass}">
+              ${stockText}
+            </p>
+
+            <div class="size-buttons mb-2" id="size-${index}">
+              <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
+              <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
+              <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
+              <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
+            </div>
+
+            <button id="add-btn-${index}" class="btn-add-cart" onclick="addFilteredSoccerToCart(${index})" ${buttonDisabled}>
+              ${buttonText}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function addFilteredSoccerToCart(index) {
-    const product = window.currentSoccerItems[index];
-    if (!product) return;
+  const product = window.currentSoccerItems[index];
+  if (!product) return;
 
-    const sizeContainer = document.getElementById(`size-${index}`);
-    const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
-    const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+  const sizeContainer = document.getElementById(`size-${index}`);
+  const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
+  const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
 
-    const selectedStock = getSizeStock(product, size);
-    const totalStock = getTotalStock(product);
+  const selectedStock = getSizeStock(product, size);
+  const totalStock = getTotalStock(product);
 
-    if (totalStock <= 0) {
-        showToast("This item is unavailable");
-        return;
-    }
+  if (totalStock <= 0) {
+    showToast("This item is unavailable");
+    return;
+  }
 
-    if (selectedStock <= 0) {
-        showToast(`${size} is out of stock`);
-        updateCardStock(index);
-        return;
-    }
+  if (selectedStock <= 0) {
+    showToast(`${size} is out of stock`);
+    updateCardStock(index);
+    return;
+  }
 
-    const item = {
-        ...product,
-        size: size
-    };
-
-    addToCart(item);
+  addToCart({
+    ...product,
+    id: product._id || product.id,
+    size,
+    quantity: 1
+  });
 }
 
 function selectSize(button, index) {
-    const container = button.parentElement;
-    container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
-    button.classList.add("active");
-    updateCardStock(index);
+  const container = button.parentElement;
+  container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
+  button.classList.add("active");
+  updateCardStock(index);
 }
 
 function updateAuthButton() {
-    const btn = document.getElementById("login-btn");
-    if (!btn) return;
+  const btn = document.getElementById("login-btn");
+  if (!btn) return;
 
-    const user = localStorage.getItem("vsv_current_user");
+  const user = localStorage.getItem("vsv_current_user");
 
-    if (user) {
-        const parsedUser = JSON.parse(user);
-        const displayName = parsedUser.username || parsedUser.email || "Account";
+  if (user) {
+    const parsedUser = JSON.parse(user);
+    const displayName = parsedUser.username || parsedUser.email || "Account";
 
-        btn.innerHTML = `<span>👤 ${displayName} | Sign Out</span>`;
-        btn.onclick = function () {
-            localStorage.removeItem("vsv_current_user");
-            window.location.href = "../index.html";
-        };
-    } else {
-        btn.innerHTML = "<span>👤 Login</span>";
-        btn.onclick = function () {
-            window.location.href = "../login.html";
-        };
+    btn.innerHTML = `<span>👤 ${displayName} | Sign Out</span>`;
+    btn.onclick = function () {
+      localStorage.removeItem("vsv_current_user");
+      window.location.href = "../index.html";
+    };
+  } else {
+    btn.innerHTML = "<span>👤 Login</span>";
+    btn.onclick = function () {
+      window.location.href = "../login.html";
+    };
+  }
+}
+
+async function loadPlayers() {
+  try {
+    const res = await fetch("/api/products/category/Soccer");
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to load Soccer products.");
     }
+
+    players = data.products || [];
+    populateTeams();
+    displayPlayers(players);
+  } catch (error) {
+    console.error("Soccer load error:", error);
+    if (typeof showToast === "function") {
+      showToast("Failed to load Soccer products");
+    }
+  }
 }
 
 function init() {
-    updateAuthButton();
-    populateTeams();
-    displayPlayers(players);
+  updateAuthButton();
+  loadPlayers();
 
-    document.getElementById("teamFilter").addEventListener("change", applyFilters);
-    document.getElementById("posFilter").addEventListener("change", applyFilters);
-    document.getElementById("sortFilter").addEventListener("change", applyFilters);
-    document.getElementById("searchInput").addEventListener("input", applyFilters);
+  document.getElementById("teamFilter").addEventListener("change", applyFilters);
+  document.getElementById("posFilter").addEventListener("change", applyFilters);
+  document.getElementById("sortFilter").addEventListener("change", applyFilters);
+  document.getElementById("searchInput").addEventListener("input", applyFilters);
 }
 
-init();
+document.addEventListener("DOMContentLoaded", init);
 </script>
 
 <script src="../database/cart.js"></script>

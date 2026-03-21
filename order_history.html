@@ -39,7 +39,7 @@
 
 <script>
   async function loadOrderHistory() {
-    const currentUser = JSON.parse(localStorage.getItem("vsv_current_user"));
+    const currentUser = JSON.parse(localStorage.getItem("vsv_current_user") || "null");
     const container = document.getElementById("orders-container");
 
     if (!currentUser || !currentUser.email) {
@@ -77,7 +77,7 @@
             </div>
             <div style="text-align:right;">
               <p style="margin:0; color:#fff;"><strong>Status:</strong> ${order.status}</p>
-              <p style="margin:4px 0 0; color:#fff;"><strong>Total:</strong> $${Number(order.total).toFixed(2)}</p>
+              <p style="margin:4px 0 0; color:#fff;"><strong>Total:</strong> $${Number(order.total || 0).toFixed(2)}</p>
             </div>
           </div>
 
@@ -86,16 +86,18 @@
               <thead>
                 <tr>
                   <th style="color:#fff;">Item</th>
+                  <th style="color:#fff;">Size</th>
                   <th style="color:#fff;">Qty</th>
                   <th style="color:#fff;">Price</th>
                 </tr>
               </thead>
               <tbody>
-                ${order.items.map(item => `
+                ${(order.items || []).map(item => `
                   <tr>
-                    <td style="color:#fff;">${item.name}</td>
-                    <td style="color:#fff;">${item.quantity}</td>
-                    <td style="color:#fff;">$${Number(item.price).toFixed(2)}</td>
+                    <td style="color:#fff;">${item.name || "Unnamed Product"}</td>
+                    <td style="color:#fff;">${item.size || "N/A"}</td>
+                    <td style="color:#fff;">${Number(item.quantity || 1)}</td>
+                    <td style="color:#fff;">$${Number(item.price || 0).toFixed(2)}</td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -103,7 +105,7 @@
           </div>
 
           <p style="margin-top: 12px; color:#fff;">
-            <strong>Shipping Address:</strong> ${order.address}
+            <strong>Shipping Address:</strong> ${order.address || "N/A"}
           </p>
         </div>
       `).join("");

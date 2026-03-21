@@ -81,14 +81,15 @@
   <p>&copy; 2026 Vintage Sports Vault | All Rights Reserved</p>
 </footer>
 
-<script src="../database/data.js"></script>
-
 <script>
-let products = window.STORE_DATA?.hockey || [];
+let products = [];
 
 function populateFilters() {
   const teamFilter = document.getElementById("teamFilter");
   const typeFilter = document.getElementById("typeFilter");
+
+  teamFilter.innerHTML = `<option value="all">All Teams</option>`;
+  typeFilter.innerHTML = `<option value="all">All Types</option>`;
 
   const teams = [...new Set(products.map(p => p.team).filter(Boolean))].sort();
   const types = [...new Set(products.map(p => p.type).filter(Boolean))].sort();
@@ -134,11 +135,11 @@ function applyFilters() {
   }
 
   if (sort === "price-asc") {
-    filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+    filtered.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
   }
 
   if (sort === "price-desc") {
-    filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+    filtered.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
   }
 
   if (sort === "name-asc") {
@@ -203,6 +204,7 @@ function displayProducts(items) {
   const resultsCount = document.getElementById("resultsCount");
 
   if (!container) return;
+
   if (resultsCount) {
     resultsCount.textContent = `${items.length} products found`;
   }
@@ -314,7 +316,9 @@ function addFilteredHockeyToCart(index) {
 
   addToCart({
     ...product,
-    size
+    id: product._id || product.id,
+    size,
+    quantity: 1
   });
 }
 
@@ -348,13 +352,29 @@ function updateAuthButton() {
   }
 }
 
-function init() {
-  console.log("All hockey products loaded:", products.length);
-  console.log(products);
+async function loadProducts() {
+  try {
+    const res = await fetch("/api/products/category/Hockey");
+    const data = await res.json();
 
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to load Hockey products.");
+    }
+
+    products = data.products || [];
+    populateFilters();
+    displayProducts(products);
+  } catch (error) {
+    console.error("Hockey load error:", error);
+    if (typeof showToast === "function") {
+      showToast("Failed to load Hockey products");
+    }
+  }
+}
+
+function init() {
   updateAuthButton();
-  populateFilters();
-  displayProducts(products);
+  loadProducts();
 
   document.getElementById("teamFilter").addEventListener("change", applyFilters);
   document.getElementById("typeFilter").addEventListener("change", applyFilters);

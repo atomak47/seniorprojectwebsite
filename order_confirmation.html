@@ -24,18 +24,46 @@
 <main class="container text-center" style="max-width:700px; margin-top:50px; margin-bottom:60px;">
   <div class="filters-bar">
     <h2>Your order has been placed successfully.</h2>
-    <p style="color: var(--text-muted); margin-top:12px;">
-      A confirmation email would normally be sent in a full production app.
+
+    <div style="margin-top:20px; text-align:left;">
+      <p><strong>Order Number:</strong> <span id="order-number">N/A</span></p>
+      <p><strong>Name:</strong> <span id="order-name">N/A</span></p>
+      <p><strong>Email:</strong> <span id="order-email">N/A</span></p>
+    </div>
+
+    <p style="color: var(--text-muted); margin-top:18px;">
+      A confirmation email has been sent if email delivery is configured.
     </p>
-    <button class="btn-add-cart" style="max-width:260px; margin-top:20px;" onclick="window.location.href='index.html'">
-      Return Home
-    </button>
+
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px;">
+      <button class="btn-add-cart" style="max-width:260px;" onclick="window.location.href='index.html'">
+        Return Home
+      </button>
+
+      <button class="cart-btn" style="max-width:260px;" onclick="window.location.href='order_history.html'">
+        View My Orders
+      </button>
+    </div>
   </div>
 </main>
 
 <footer>
   <p>&copy; 2026 Vintage Sports Vault | All Rights Reserved</p>
 </footer>
+
+<script>
+  function loadOrderConfirmation() {
+    const orderNumber = localStorage.getItem("vsv_order_number") || "N/A";
+    const orderName = localStorage.getItem("vsv_order_name") || "N/A";
+    const orderEmail = localStorage.getItem("vsv_order_email") || "N/A";
+
+    document.getElementById("order-number").textContent = orderNumber;
+    document.getElementById("order-name").textContent = orderName;
+    document.getElementById("order-email").textContent = orderEmail;
+  }
+
+  loadOrderConfirmation();
+</script>
 
 </body>
 </html>

@@ -5,7 +5,8 @@ const orderItemSchema = new mongoose.Schema(
     productId: String,
     name: String,
     price: Number,
-    quantity: Number
+    quantity: Number,
+    size: String
   },
   { _id: false }
 );

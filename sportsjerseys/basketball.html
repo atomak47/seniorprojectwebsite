@@ -37,7 +37,6 @@
 
 <!-- Main -->
 <div class="container" style="max-width:1300px;">
-    <!-- Filters -->
     <div class="filters-bar">
         <div class="row g-3 align-items-end">
             <div class="col-6 col-md-3">
@@ -108,14 +107,14 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<script src="../database/data.js"></script>
 <script>
-let players = window.STORE_DATA?.nba || [];
-let cart = [];
+let players = [];
 
 function populateTeams() {
     const teamFilter = document.getElementById("teamFilter");
-    const teams = [...new Set(players.map(p => p.team))].sort();
+    teamFilter.innerHTML = `<option value="all">All Teams</option>`;
+
+    const teams = [...new Set(players.map(p => p.team).filter(Boolean))].sort();
 
     teams.forEach(team => {
         const option = document.createElement("option");
@@ -129,42 +128,51 @@ function applyFilters() {
     const team = document.getElementById("teamFilter").value;
     const pos = document.getElementById("posFilter").value;
     const sort = document.getElementById("sortFilter").value;
-    const search = document.getElementById("searchInput").value.toLowerCase();
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
 
     let filtered = [...players];
 
-    if (team !== "all")
+    if (team !== "all") {
         filtered = filtered.filter(p => p.team === team);
+    }
 
-    if (pos !== "all")
+    if (pos !== "all") {
         filtered = filtered.filter(p => p.pos === pos);
+    }
 
-    if (search)
+    if (search) {
         filtered = filtered.filter(p =>
-            p.name.toLowerCase().includes(search)
+            (p.name || "").toLowerCase().includes(search) ||
+            (p.team || "").toLowerCase().includes(search)
         );
+    }
 
-    if (sort === "price-asc")
-        filtered.sort((a,b)=>a.price-b.price);
+    if (sort === "price-asc") {
+        filtered.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    }
 
-    if (sort === "price-desc")
-        filtered.sort((a,b)=>b.price-a.price);
+    if (sort === "price-desc") {
+        filtered.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+    }
 
-    if (sort === "name-asc")
-        filtered.sort((a,b)=>a.name.localeCompare(b.name));
+    if (sort === "name-asc") {
+        filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
 
-    if (sort === "rating-desc")
-        filtered.sort((a,b)=>b.rating-a.rating);
+    if (sort === "rating-desc") {
+        filtered.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+    }
 
     displayPlayers(filtered);
 }
 
 function getSizeStock(player, size) {
-    return Number(player?.stock || 0);
+    return Number(player?.sizes?.[size] ?? 0);
 }
 
 function getTotalStock(player) {
-    return Number(player?.stock || 0);
+    const sizes = player?.sizes || {};
+    return Number(sizes.S || 0) + Number(sizes.M || 0) + Number(sizes.L || 0) + Number(sizes.XL || 0);
 }
 
 function updateCardStock(index) {
@@ -192,12 +200,12 @@ function updateCardStock(index) {
     }
 
     if (selectedStock > 0) {
-        stockEl.textContent = `In Stock (${selectedStock} left)`;
+        stockEl.textContent = `${selectedSize} In Stock (${selectedStock} left)`;
         stockEl.className = "stock-status in-stock";
         addBtn.textContent = "Add to Cart";
         addBtn.disabled = false;
     } else {
-        stockEl.textContent = "Out of Stock";
+        stockEl.textContent = `${selectedSize} Out of Stock`;
         stockEl.className = "stock-status out-stock";
         addBtn.textContent = "Add to Cart";
         addBtn.disabled = false;
@@ -205,148 +213,168 @@ function updateCardStock(index) {
 }
 
 function displayPlayers(items) {
-  const grid = document.getElementById("player-grid");
-  const resultsCount = document.getElementById("resultsCount");
+    const grid = document.getElementById("player-grid");
+    const resultsCount = document.getElementById("resultsCount");
 
-  resultsCount.textContent = `${items.length} products found`;
+    resultsCount.textContent = `${items.length} products found`;
+    window.currentBasketballItems = items;
 
-  window.currentBasketballItems = items;
+    grid.innerHTML = items.map((player, index) => {
+        const totalStock = getTotalStock(player);
+        const initialSize = "M";
+        const initialStock = getSizeStock(player, initialSize);
 
-  grid.innerHTML = items.map((player, index) => {
-    const totalStock = getTotalStock(player);
-    const initialSize = "M";
-    const initialStock = getSizeStock(player, initialSize);
+        let stockText = "";
+        let stockClass = "";
+        let buttonText = "";
+        let buttonDisabled = "";
 
-    let stockText = "";
-    let stockClass = "";
-    let buttonText = "";
-    let buttonDisabled = "";
+        if (totalStock <= 0) {
+            stockText = "";
+            stockClass = "";
+            buttonText = "Unavailable";
+            buttonDisabled = "disabled";
+        } else if (initialStock > 0) {
+            stockText = `${initialSize} In Stock (${initialStock} left)`;
+            stockClass = "in-stock";
+            buttonText = "Add to Cart";
+            buttonDisabled = "";
+        } else {
+            stockText = `${initialSize} Out of Stock`;
+            stockClass = "out-stock";
+            buttonText = "Add to Cart";
+            buttonDisabled = "";
+        }
 
-    if (totalStock <= 0) {
-      stockText = "";
-      stockClass = "";
-      buttonText = "Unavailable";
-      buttonDisabled = "disabled";
-    } else if (initialStock > 0) {
-      stockText = `In Stock (${initialStock} left)`;
-      stockClass = "in-stock";
-      buttonText = "Add to Cart";
-      buttonDisabled = "";
-    } else {
-      stockText = "Out of Stock";
-      stockClass = "out-stock";
-      buttonText = "Add to Cart";
-      buttonDisabled = "";
-    }
+        return `
+          <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+            <div class="card h-100">
+              <div class="card-img-wrap">
+                <img class="card-img-top"
+                  src="${player.image || player.img || 'https://via.placeholder.com/400x300?text=No+Image'}"
+                  alt="${player.name || 'NBA Product'}">
+              </div>
 
-    return `
-      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <div class="card h-100">
-          <div class="card-img-wrap">
-            <img class="card-img-top"
-              src="${player.img}"
-              alt="${player.name}">
-          </div>
+              <div class="card-body">
+                <div class="team-badge">${player.team || 'Unknown Team'}</div>
 
-          <div class="card-body">
-            <div class="team-badge">${player.team}</div>
+                <h3 class="player-name">${player.name || 'Unnamed Product'}</h3>
 
-            <h3 class="player-name">${player.name}</h3>
+                <p class="player-pos">${player.pos || player.type || 'NBA'}${player.number ? ` · #${player.number}` : ''}</p>
 
-            <p class="player-pos">${player.pos} · #${player.number}</p>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="price">$${Number(player.price || 0).toFixed(2)}</div>
+                  <div class="rating">★ ${Number(player.rating || 0).toFixed(1)}</div>
+                </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="price">$${player.price.toFixed(2)}</div>
-              <div class="rating">★ ${player.rating}</div>
+                <p id="stock-text-${index}" class="stock-status ${stockClass}">
+                  ${stockText}
+                </p>
+
+                <div class="size-buttons mb-2" id="size-${index}">
+                  <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
+                  <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
+                  <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
+                  <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
+                </div>
+
+                <button id="add-btn-${index}" class="btn-add-cart"
+                  onclick="addFilteredBasketballToCart(${index})"
+                  ${buttonDisabled}>
+                  ${buttonText}
+                </button>
+              </div>
             </div>
-
-            <p id="stock-text-${index}" class="stock-status ${stockClass}">
-              ${stockText}
-            </p>
-
-            <div class="size-buttons mb-2" id="size-${index}">
-              <button type="button" class="size-btn" data-size="S" onclick="selectSize(this, ${index})">S</button>
-              <button type="button" class="size-btn active" data-size="M" onclick="selectSize(this, ${index})">M</button>
-              <button type="button" class="size-btn" data-size="L" onclick="selectSize(this, ${index})">L</button>
-              <button type="button" class="size-btn" data-size="XL" onclick="selectSize(this, ${index})">XL</button>
-            </div>
-
-            <button id="add-btn-${index}" class="btn-add-cart"
-              onclick="addFilteredBasketballToCart(${index})"
-              ${buttonDisabled}>
-              ${buttonText}
-            </button>
           </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+        `;
+    }).join("");
 }
 
 function addFilteredBasketballToCart(index) {
-  const product = window.currentBasketballItems[index];
-  if (!product) return;
+    const product = window.currentBasketballItems[index];
+    if (!product) return;
 
-  const sizeContainer = document.getElementById(`size-${index}`);
-  const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
-  const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
+    const sizeContainer = document.getElementById(`size-${index}`);
+    const activeSizeBtn = sizeContainer ? sizeContainer.querySelector(".size-btn.active") : null;
+    const size = activeSizeBtn ? activeSizeBtn.dataset.size : "M";
 
-  const selectedStock = getSizeStock(product, size);
-  const totalStock = getTotalStock(product);
+    const selectedStock = getSizeStock(product, size);
+    const totalStock = getTotalStock(product);
 
-  if (totalStock <= 0) {
-    showToast("This item is unavailable");
-    return;
-  }
+    if (totalStock <= 0) {
+        showToast("This item is unavailable");
+        return;
+    }
 
-  if (selectedStock <= 0) {
-    showToast(`${size} is out of stock`);
-    updateCardStock(index);
-    return;
-  }
+    if (selectedStock <= 0) {
+        showToast(`${size} is out of stock`);
+        updateCardStock(index);
+        return;
+    }
 
-  const item = {
-    ...product,
-    size: size
-  };
+    const item = {
+        ...product,
+        id: product._id || product.id,
+        size: size,
+        quantity: 1
+    };
 
-  addToCart(item);
+    addToCart(item);
 }
 
 function selectSize(button, index) {
-  const container = button.parentElement;
-  container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
-  button.classList.add("active");
-  updateCardStock(index);
+    const container = button.parentElement;
+    container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
+    button.classList.add("active");
+    updateCardStock(index);
 }
 
 function updateAuthButton() {
-  const btn = document.getElementById("login-btn");
-  if (!btn) return;
+    const btn = document.getElementById("login-btn");
+    if (!btn) return;
 
-  const user = localStorage.getItem("vsv_current_user");
+    const user = localStorage.getItem("vsv_current_user");
 
-  if (user) {
-    const parsedUser = JSON.parse(user);
-    const displayName = parsedUser.username || parsedUser.email || "Account";
+    if (user) {
+        const parsedUser = JSON.parse(user);
+        const displayName = parsedUser.username || parsedUser.email || "Account";
 
-    btn.innerHTML = `<span>👤 ${displayName} | Sign Out</span>`;
-    btn.onclick = function () {
-      localStorage.removeItem("vsv_current_user");
-      window.location.href = "../index.html";
-    };
-  } else {
-    btn.innerHTML = "<span>👤 Login</span>";
-    btn.onclick = function () {
-      window.location.href = "../login.html";
-    };
-  }
+        btn.innerHTML = `<span>👤 ${displayName} | Sign Out</span>`;
+        btn.onclick = function () {
+            localStorage.removeItem("vsv_current_user");
+            window.location.href = "../index.html";
+        };
+    } else {
+        btn.innerHTML = "<span>👤 Login</span>";
+        btn.onclick = function () {
+            window.location.href = "../login.html";
+        };
+    }
+}
+
+async function loadPlayers() {
+    try {
+        const res = await fetch("/api/products/category/NBA");
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            throw new Error(data.message || "Failed to load NBA products.");
+        }
+
+        players = data.products || [];
+        populateTeams();
+        displayPlayers(players);
+    } catch (error) {
+        console.error("NBA load error:", error);
+        if (typeof showToast === "function") {
+            showToast("Failed to load NBA products");
+        }
+    }
 }
 
 function init() {
     updateAuthButton();
-    populateTeams();
-    displayPlayers(players);
+    loadPlayers();
 
     document.getElementById("teamFilter").addEventListener("change", applyFilters);
     document.getElementById("posFilter").addEventListener("change", applyFilters);

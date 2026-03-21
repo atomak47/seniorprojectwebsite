@@ -73,6 +73,10 @@
     return JSON.parse(localStorage.getItem("vsv_cart")) || [];
   }
 
+  function getCurrentUser() {
+    return JSON.parse(localStorage.getItem("vsv_current_user") || "null");
+  }
+
   function getCartTotal() {
     return getCart().reduce((sum, item) => {
       return sum + Number(item.price || 0) * Number(item.quantity || 1);
@@ -89,6 +93,13 @@
 
   function loadCheckoutInfo() {
     const cart = getCart();
+    const currentUser = getCurrentUser();
+
+    if (!currentUser) {
+      alert("Please log in before checkout.");
+      window.location.href = "login.html";
+      return;
+    }
 
     if (!cart.length) {
       alert("Your cart is empty.");
@@ -98,14 +109,12 @@
 
     document.getElementById("orderTotal").value = `$${getCartTotal().toFixed(2)}`;
 
-    const currentUser = JSON.parse(localStorage.getItem("vsv_current_user"));
-    if (currentUser) {
-      if (currentUser.username) {
-        document.getElementById("fullName").value = currentUser.username;
-      }
-      if (currentUser.email) {
-        document.getElementById("email").value = currentUser.email;
-      }
+    if (currentUser.username) {
+      document.getElementById("fullName").value = currentUser.username;
+    }
+
+    if (currentUser.email) {
+      document.getElementById("email").value = currentUser.email;
     }
   }
 
@@ -117,6 +126,13 @@
     event.preventDefault();
 
     const cart = getCart();
+    const currentUser = getCurrentUser();
+
+    if (!currentUser) {
+      alert("Please log in before checkout.");
+      window.location.href = "login.html";
+      return;
+    }
 
     if (!cart.length) {
       alert("Your cart is empty.");
@@ -134,7 +150,13 @@
       name: document.getElementById("fullName").value.trim(),
       email: document.getElementById("email").value.trim(),
       address: document.getElementById("address").value.trim(),
-      cart,
+      cart: cart.map(item => ({
+        id: item.id || item._id || "",
+        name: item.name || "Unnamed Product",
+        price: Number(item.price || 0),
+        quantity: Number(item.quantity || 1),
+        size: item.size || "M"
+      })),
       total: getCartTotal()
     };
 

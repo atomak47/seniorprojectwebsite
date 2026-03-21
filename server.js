@@ -212,7 +212,8 @@ app.post("/api/checkout", async (req, res) => {
         productId: item.id || item.productId || "",
         name: item.name || "Unnamed Product",
         price: Number(item.price || 0),
-        quantity: Number(item.quantity || 1)
+        quantity: Number(item.quantity || 1),
+        size: item.size || "M"
       })),
       total: Number(total || 0),
       status: "Pending"
@@ -229,7 +230,11 @@ app.post("/api/checkout", async (req, res) => {
       const product = await Product.findById(productId);
       if (!product) continue;
 
-      product.sizes[size] = Math.max(0, Number(product.sizes[size] || 0) - quantity);
+      product.sizes[size] = Math.max(
+        0,
+        Number(product.sizes[size] || 0) - quantity
+      );
+
       await product.save();
     }
 
@@ -239,7 +244,7 @@ app.post("/api/checkout", async (req, res) => {
       <tr>
         <td style="padding:8px;border:1px solid #ddd;">${item.name}</td>
         <td style="padding:8px;border:1px solid #ddd;">${item.quantity || 1}</td>
-        <td style="padding:8px;border:1px solid #ddd;">${item.size || "N/A"}</td>
+        <td style="padding:8px;border:1px solid #ddd;">${item.size || "M"}</td>
         <td style="padding:8px;border:1px solid #ddd;">$${Number(item.price || 0).toFixed(2)}</td>
       </tr>
     `
@@ -291,7 +296,7 @@ app.post("/api/checkout", async (req, res) => {
         <p><strong>Total:</strong> $${Number(total || 0).toFixed(2)}</p>
         <hr>
         <ul>
-          ${cart.map((item) => `<li>${item.name} x ${item.quantity || 1} (${item.size || "N/A"})</li>`).join("")}
+          ${cart.map((item) => `<li>${item.name} x ${item.quantity || 1} (${item.size || "M"})</li>`).join("")}
         </ul>
       `
     };
