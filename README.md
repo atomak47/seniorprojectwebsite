@@ -18,4 +18,5 @@ Create a user login and make sure you use a gmail account
 6. Make the checkout page a bit better
     -fix white font make it black
 7. Add a user profile -and have it autofill user info when checking out
+8. New arrivals page that blends all three 
 
