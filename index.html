@@ -1,164 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vintage Sports Vault</title>
 
-  <link rel="stylesheet" href="css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<nav class="navbar">
-  <a class="navbar-brand" href="index.html">
-    VINTAGE<span>SPORTS</span>
-  </a>
-
-  <div class="nav-actions" id="nav-actions">
-    <button id="login-btn" class="cart-btn"></button>
-
-    <button class="cart-btn" onclick="window.location.href='cart.html'">
-      <span>🛒 Cart</span>
-      <span class="cart-badge" id="cart-count">0</span>
-    </button>
-  </div>
-</nav>
-
-<header class="nba-hero">
-  <div class="container">
-    <div class="hero-title">VINTAGE <span>SPORTS</span> VAULT</div>
-    <p class="hero-sub">Classic & Modern Jerseys</p>
-    <div class="hero-divider"></div>
-  </div>
-</header>
-
-<div class="container" style="max-width:1200px; margin-top:40px;">
-  <div class="row g-4">
-
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card" onclick="window.location.href='sportsjerseys/basketball.html'" style="cursor:pointer;">
-        <div class="card-img-wrap">
-          <img class="card-img-top" src="https://static.vecteezy.com/system/resources/thumbnails/015/863/585/small_2x/nba-logo-on-transparent-background-free-vector.jpg" alt="NBA Jerseys">
-        </div>
-        <div class="card-body">
-          <h3 class="player-name">NBA Jerseys</h3>
-          <p class="player-pos">Classic and modern NBA jerseys from all your favorite teams.</p>
-        </div>
-      </div>
+  <div class="announcement-bar">
+    <div class="announcement-track">
+      <span>Curated vintage and modern jerseys</span>
+      <span>Premium football culture inspired design</span>
+      <span>New arrivals every week</span>
     </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card" onclick="window.location.href='sportsjerseys/hockey.html'" style="cursor:pointer;">
-        <div class="card-img-wrap">
-          <img class="card-img-top" src="https://1000logos.net/wp-content/uploads/2017/05/NHL-Logo.png" alt="Hockey Jerseys">
-        </div>
-        <div class="card-body">
-          <h3 class="player-name">Hockey Jerseys</h3>
-          <p class="player-pos">Explore throwback and current hockey jerseys from all teams.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card" onclick="window.location.href='sportsjerseys/soccer.html'" style="cursor:pointer;">
-        <div class="card-img-wrap">
-          <img class="card-img-top" src="https://static.vecteezy.com/system/resources/thumbnails/012/251/871/small_2x/world-cup-in-qatar-logo-on-white-background-vector.jpg" alt="Soccer Jerseys">
-        </div>
-        <div class="card-body">
-          <h3 class="player-name">Soccer Jerseys</h3>
-          <p class="player-pos">Shop iconic soccer jerseys from legendary clubs and national teams.</p>
-        </div>
-      </div>
-    </div>
-
   </div>
-</div>
 
-<footer>
-  <p>&copy; 2026 Vintage Sports Vault | All Rights Reserved</p>
-</footer>
+  <header class="site-header">
+    <nav class="nav-left">
+      <a href="sportsjerseys/basketball.html">Basketball</a>
+      <a href="sportsjerseys/hockey.html">Hockey</a>
+      <a href="sportsjerseys/soccer.html">Soccer</a>
+    </nav>
 
-<script>
-  function getCart() {
-    return JSON.parse(localStorage.getItem("vsv_cart")) || [];
-  }
+    <a class="site-brand" href="index.html">Vintage Sports Vault</a>
 
-  function updateCartCount() {
-    const badge = document.getElementById("cart-count");
-    if (!badge) return;
+    <div class="nav-right" id="nav-actions">
+      <button id="login-btn" class="header-btn" type="button">Login</button>
+      <button class="header-btn" type="button" onclick="window.location.href='cart.html'">
+        Cart <span class="count-pill" id="cart-count">0</span>
+      </button>
+    </div>
+  </header>
 
-    const totalItems = getCart().reduce((sum, item) => {
-      return sum + Number(item.quantity || 1);
-    }, 0);
+  <main>
+    <section class="hero-layout">
+      <a class="hero-card hero-card-large" href="sportsjerseys/soccer.html">
+        <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80" alt="Soccer Jerseys" />
+        <div class="hero-copy">
+          <span class="eyebrow">Shop</span>
+          <h1>Soccer Jerseys</h1>
+        </div>
+      </a>
 
-    badge.textContent = totalItems;
-  }
+      <a class="hero-card" href="sportsjerseys/basketball.html">
+        <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1000&q=80" alt="Basketball Jerseys" />
+        <div class="hero-copy hero-copy-small">
+          <span class="eyebrow">Shop</span>
+          <h2>Basketball</h2>
+        </div>
+      </a>
 
-  function updateAuthButton() {
-    const navActions = document.getElementById("nav-actions");
-    if (!navActions) return;
+      <a class="hero-card" href="sportsjerseys/hockey.html">
+        <img src="https://images.unsplash.com/photo-1515703407324-5f753afd8be8?auto=format&fit=crop&w=1000&q=80" alt="Hockey Jerseys" />
+        <div class="hero-copy hero-copy-small">
+          <span class="eyebrow">Shop</span>
+          <h2>Hockey</h2>
+        </div>
+      </a>
+    </section>
 
-    const user = localStorage.getItem("vsv_current_user");
+    <section class="category-band">
+      <div class="band-intro">
+        <span class="section-label">Collections</span>
+        <h3>Browse our various options</h3>
+      </div>
 
-    if (user) {
-      const parsedUser = JSON.parse(user);
-      const displayName = parsedUser.username || parsedUser.email || "Account";
+      <div class="category-links">
+        <a href="sportsjerseys/soccer.html">New Arrivals</a>
+        <a href="sportsjerseys/basketball.html">Basketball Classics</a>
+        <a href="sportsjerseys/hockey.html">Hockey Heritage</a>
+        <a href="sportsjerseys/soccer.html">International Football</a>
+      </div>
+    </section>
 
-      navActions.innerHTML = `
-        <button class="cart-btn" type="button" onclick="window.location.href='order_history.html'">
-          <span>📦 My Orders</span>
-        </button>
+    <section class="editorial-grid">
+      <article class="editorial-card">
+        <span class="section-label">01</span>
+        <h3>About Us</h3>
+        <p>We are a small e-commerce online store offering premium vintage and modern sports jerseys.</p>
+      </article>
 
-        <button class="cart-btn" type="button">
-          <span>👤 ${displayName}</span>
-        </button>
+      <article class="editorial-card">
+        <span class="section-label">02</span>
+        <h3>Contact Us</h3>
+        <p>(732)-123-4567</p>
+        <p> Kean University
+        <p> Union, New Jersey</p>
+        </p>
+      </article>
 
-        <button id="login-btn" class="cart-btn" type="button">
-          <span>Sign Out</span>
-        </button>
+      <article class="editorial-card">
+        <span class="section-label">03</span>
+        <h3>Headquarters Located</h3>
+        <p>Keaan University</p>
+        <p>Union, New Jersey</p>
+        
+      </article>
+    </section>
+  </main>
 
-        <button class="cart-btn" onclick="window.location.href='cart.html'">
-          <span>🛒 Cart</span>
-          <span class="cart-badge" id="cart-count">0</span>
-        </button>
-      `;
+  <footer class="site-footer">
+    <p>© 2026 Vintage Sports Vault. All rights reserved.</p>
+  </footer>
 
-      const loginBtn = document.getElementById("login-btn");
-      if (loginBtn) {
-        loginBtn.onclick = function () {
-          localStorage.removeItem("vsv_current_user");
-          window.location.href = "index.html";
-        };
-      }
-    } else {
-      navActions.innerHTML = `
-        <button id="login-btn" class="cart-btn" type="button">
-          <span>👤 Login</span>
-        </button>
-
-        <button class="cart-btn" onclick="window.location.href='cart.html'">
-          <span>🛒 Cart</span>
-          <span class="cart-badge" id="cart-count">0</span>
-        </button>
-      `;
-
-      const loginBtn = document.getElementById("login-btn");
-      if (loginBtn) {
-        loginBtn.onclick = function () {
-          window.location.href = "login.html";
-        };
-      }
+  <script>
+    function getCart() {
+      return JSON.parse(localStorage.getItem("vsv_cart")) || [];
     }
 
-    updateCartCount();
-  }
+    function updateCartCount() {
+      const badge = document.getElementById("cart-count");
+      if (!badge) return;
 
-  document.addEventListener("DOMContentLoaded", function () {
-    updateAuthButton();
-  });
-</script>
+      const totalItems = getCart().reduce((sum, item) => {
+        return sum + Number(item.quantity || 1);
+      }, 0);
 
+      badge.textContent = totalItems;
+    }
+
+    function updateAuthButton() {
+      const navActions = document.getElementById("nav-actions");
+      if (!navActions) return;
+
+      const user = localStorage.getItem("vsv_current_user");
+
+      if (user) {
+        const parsedUser = JSON.parse(user);
+        const displayName = parsedUser.username || parsedUser.email || "Account";
+
+        navActions.innerHTML = `
+          <button class="header-btn" type="button" onclick="window.location.href='order_history.html'">
+            Orders
+          </button>
+
+          <button class="header-btn" type="button">
+            ${displayName}
+          </button>
+
+          <button id="login-btn" class="header-btn" type="button">
+            Sign Out
+          </button>
+
+          <button class="header-btn" type="button" onclick="window.location.href='cart.html'">
+            Cart <span class="count-pill" id="cart-count">0</span>
+          </button>
+        `;
+
+        const loginBtn = document.getElementById("login-btn");
+        if (loginBtn) {
+          loginBtn.onclick = function () {
+            localStorage.removeItem("vsv_current_user");
+            window.location.href = "index.html";
+          };
+        }
+      } else {
+        navActions.innerHTML = `
+          <button id="login-btn" class="header-btn" type="button">Login</button>
+          <button class="header-btn" type="button" onclick="window.location.href='cart.html'">
+            Cart <span class="count-pill" id="cart-count">0</span>
+          </button>
+        `;
+
+        const loginBtn = document.getElementById("login-btn");
+        if (loginBtn) {
+          loginBtn.onclick = function () {
+            window.location.href = "login.html";
+          };
+        }
+      }
+
+      updateCartCount();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      updateAuthButton();
+    });
+  </script>
 </body>
 </html>
