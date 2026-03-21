@@ -170,6 +170,36 @@ app.post("/api/checkout", async (req, res) => {
       });
     }
 
+    // Validate inventory first
+    for (const item of cart) {
+      const productId = item.id || item.productId;
+      const size = item.size;
+      const quantity = Number(item.quantity || 1);
+
+      if (!productId || !size) {
+        return res.status(400).json({
+          success: false,
+          message: `Missing product or size for ${item.name || "an item"}.`
+        });
+      }
+
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `${item.name || "A product"} was not found.`
+        });
+      }
+
+      const available = Number(product?.sizes?.[size] ?? 0);
+      if (available < quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `${item.name} (${size}) does not have enough stock.`
+        });
+      }
+    }
+
     const orderNumber = `VSV-${Date.now()}`;
 
     // Save order to MongoDB
@@ -179,7 +209,7 @@ app.post("/api/checkout", async (req, res) => {
       email: email.trim().toLowerCase(),
       address: address.trim(),
       items: cart.map((item) => ({
-        productId: item.id || "",
+        productId: item.id || item.productId || "",
         name: item.name || "Unnamed Product",
         price: Number(item.price || 0),
         quantity: Number(item.quantity || 1)
@@ -190,12 +220,26 @@ app.post("/api/checkout", async (req, res) => {
 
     await order.save();
 
+    // Reduce inventory after order save
+    for (const item of cart) {
+      const productId = item.id || item.productId;
+      const size = item.size;
+      const quantity = Number(item.quantity || 1);
+
+      const product = await Product.findById(productId);
+      if (!product) continue;
+
+      product.sizes[size] = Math.max(0, Number(product.sizes[size] || 0) - quantity);
+      await product.save();
+    }
+
     const itemsHtml = cart
       .map(
         (item) => `
       <tr>
         <td style="padding:8px;border:1px solid #ddd;">${item.name}</td>
         <td style="padding:8px;border:1px solid #ddd;">${item.quantity || 1}</td>
+        <td style="padding:8px;border:1px solid #ddd;">${item.size || "N/A"}</td>
         <td style="padding:8px;border:1px solid #ddd;">$${Number(item.price || 0).toFixed(2)}</td>
       </tr>
     `
@@ -219,6 +263,7 @@ app.post("/api/checkout", async (req, res) => {
               <tr>
                 <th style="padding:8px;border:1px solid #ddd;text-align:left;">Item</th>
                 <th style="padding:8px;border:1px solid #ddd;text-align:left;">Qty</th>
+                <th style="padding:8px;border:1px solid #ddd;text-align:left;">Size</th>
                 <th style="padding:8px;border:1px solid #ddd;text-align:left;">Price</th>
               </tr>
             </thead>
@@ -246,7 +291,7 @@ app.post("/api/checkout", async (req, res) => {
         <p><strong>Total:</strong> $${Number(total || 0).toFixed(2)}</p>
         <hr>
         <ul>
-          ${cart.map((item) => `<li>${item.name} x ${item.quantity || 1}</li>`).join("")}
+          ${cart.map((item) => `<li>${item.name} x ${item.quantity || 1} (${item.size || "N/A"})</li>`).join("")}
         </ul>
       `
     };
@@ -292,10 +337,29 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
+// Get products by category
+app.get("/api/products/category/:category", async (req, res) => {
+  try {
+    const category = req.params.category.trim();
+
+    const products = await Product.find({ category }).sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      products
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch category products."
+    });
+  }
+});
+
 // Add new product
 app.post("/api/products", async (req, res) => {
   try {
-    const { name, team, category, type, price, stock, image, description } = req.body;
+    const { name, team, category, type, price, sizes, image, description } = req.body;
 
     if (!name || !category || price === undefined) {
       return res.status(400).json({
@@ -310,7 +374,12 @@ app.post("/api/products", async (req, res) => {
       category: category.trim(),
       type: (type || "N/A").trim(),
       price: Number(price),
-      stock: Number(stock ?? 10),
+      sizes: {
+        S: Number(sizes?.S ?? 0),
+        M: Number(sizes?.M ?? 0),
+        L: Number(sizes?.L ?? 0),
+        XL: Number(sizes?.XL ?? 0)
+      },
       image: (image || "").trim(),
       description: (description || "").trim()
     });
@@ -334,7 +403,7 @@ app.post("/api/products", async (req, res) => {
 app.put("/api/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, team, category, type, price, stock, image, description } = req.body;
+    const { name, team, category, type, price, sizes, image, description } = req.body;
 
     const updated = await Product.findByIdAndUpdate(
       id,
@@ -343,8 +412,15 @@ app.put("/api/products/:id", async (req, res) => {
         team: team?.trim(),
         category: category?.trim(),
         type: type?.trim(),
-        price: Number(price),
-        stock: Number(stock),
+        price: price !== undefined ? Number(price) : undefined,
+        sizes: sizes
+          ? {
+              S: Number(sizes.S ?? 0),
+              M: Number(sizes.M ?? 0),
+              L: Number(sizes.L ?? 0),
+              XL: Number(sizes.XL ?? 0)
+            }
+          : undefined,
         image: image?.trim(),
         description: description?.trim()
       },
@@ -418,7 +494,6 @@ app.get("/api/orders/user/:email", async (req, res) => {
     });
   }
 });
-
 
 /* =========================
    FRONTEND FALLBACK

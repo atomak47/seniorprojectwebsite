@@ -92,9 +92,22 @@
         <input type="number" id="price" class="form-control" step="0.01" required>
       </div>
 
-      <div>
-        <label class="admin-label">Stock</label>
-        <input type="number" id="stock" class="form-control" value="10" required>
+      <div class="full-width">
+        <label class="admin-label">Inventory By Size</label>
+        <div class="row g-3">
+          <div class="col-6 col-md-3">
+            <input type="number" id="stock-s" class="form-control" placeholder="S" value="10" min="0" required>
+          </div>
+          <div class="col-6 col-md-3">
+            <input type="number" id="stock-m" class="form-control" placeholder="M" value="10" min="0" required>
+          </div>
+          <div class="col-6 col-md-3">
+            <input type="number" id="stock-l" class="form-control" placeholder="L" value="10" min="0" required>
+          </div>
+          <div class="col-6 col-md-3">
+            <input type="number" id="stock-xl" class="form-control" placeholder="XL" value="10" min="0" required>
+          </div>
+        </div>
       </div>
 
       <div class="full-width">
@@ -132,7 +145,7 @@
             <th>Category</th>
             <th>Type</th>
             <th>Price</th>
-            <th>Stock</th>
+            <th>Inventory</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -150,6 +163,16 @@
 <script>
   let allProducts = [];
 
+  function getTotalStock(product) {
+    const sizes = product?.sizes || {};
+    return Number(sizes.S || 0) + Number(sizes.M || 0) + Number(sizes.L || 0) + Number(sizes.XL || 0);
+  }
+
+  function getSizesText(product) {
+    const sizes = product?.sizes || {};
+    return `S:${Number(sizes.S || 0)} | M:${Number(sizes.M || 0)} | L:${Number(sizes.L || 0)} | XL:${Number(sizes.XL || 0)}`;
+  }
+
   async function fetchProducts() {
     const res = await fetch("/api/products");
     const data = await res.json();
@@ -166,14 +189,18 @@
     const tbody = document.getElementById("inventory-table");
 
     const filtered = allProducts.filter(product =>
-      product.name.toLowerCase().includes(filter.toLowerCase())
+      (product.name || "").toLowerCase().includes(filter.toLowerCase())
     );
 
     document.getElementById("total-products").textContent = allProducts.length;
     document.getElementById("low-stock-products").textContent =
-      allProducts.filter(p => p.stock > 0 && p.stock <= 5).length;
+      allProducts.filter(p => {
+        const total = getTotalStock(p);
+        return total > 0 && total <= 5;
+      }).length;
+
     document.getElementById("out-stock-products").textContent =
-      allProducts.filter(p => p.stock === 0).length;
+      allProducts.filter(p => getTotalStock(p) === 0).length;
 
     if (!filtered.length) {
       tbody.innerHTML = `
@@ -185,9 +212,11 @@
     }
 
     tbody.innerHTML = filtered.map(product => {
+      const totalStock = getTotalStock(product);
+
       const stockClass =
-        product.stock === 0 ? "admin-stock-badge out" :
-        product.stock <= 5 ? "admin-stock-badge low" :
+        totalStock === 0 ? "admin-stock-badge out" :
+        totalStock <= 5 ? "admin-stock-badge low" :
         "admin-stock-badge";
 
       return `
@@ -195,7 +224,7 @@
           <td>
             <div class="admin-product-cell">
               <img
-                src="${product.image || 'https://via.placeholder.com/60'}"
+                src="${product.image || product.img || 'https://via.placeholder.com/60'}"
                 alt="${product.name}"
                 class="admin-product-thumb"
               >
@@ -207,8 +236,13 @@
           </td>
           <td><span class="admin-category-badge">${product.category}</span></td>
           <td>${product.type || "N/A"}</td>
-          <td><span class="admin-price">$${Number(product.price).toFixed(2)}</span></td>
-          <td><span class="${stockClass}">${product.stock}</span></td>
+          <td><span class="admin-price">$${Number(product.price || 0).toFixed(2)}</span></td>
+          <td>
+            <div>
+              <span class="${stockClass}">${totalStock}</span>
+              <div style="font-size:12px; margin-top:6px;">${getSizesText(product)}</div>
+            </div>
+          </td>
           <td>
             <div class="admin-actions">
               <button class="admin-btn-sm danger" onclick="deleteProduct('${product._id}')">Delete</button>
@@ -245,9 +279,14 @@
       category: document.getElementById("category").value,
       type: document.getElementById("type").value.trim(),
       price: Number(document.getElementById("price").value),
-      stock: Number(document.getElementById("stock").value),
       image: document.getElementById("image").value.trim(),
-      description: document.getElementById("description").value.trim()
+      description: document.getElementById("description").value.trim(),
+      sizes: {
+        S: Number(document.getElementById("stock-s").value),
+        M: Number(document.getElementById("stock-m").value),
+        L: Number(document.getElementById("stock-l").value),
+        XL: Number(document.getElementById("stock-xl").value)
+      }
     };
 
     const res = await fetch("/api/products", {
@@ -266,7 +305,11 @@
     }
 
     this.reset();
-    document.getElementById("stock").value = 10;
+    document.getElementById("stock-s").value = 10;
+    document.getElementById("stock-m").value = 10;
+    document.getElementById("stock-l").value = 10;
+    document.getElementById("stock-xl").value = 10;
+
     await fetchProducts();
   });
 
