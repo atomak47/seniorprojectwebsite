@@ -81,6 +81,9 @@
           throw new Error(result.message || "Login failed.");
         }
 
+        console.log("LOGIN RESULT USER:", result.user);
+        alert("Logged in user:\n" + JSON.stringify(result.user, null, 2));
+
         localStorage.setItem("vsv_current_user", JSON.stringify(result.user));
 
         if (result.user.role === "admin") {
