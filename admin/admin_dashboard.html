@@ -18,8 +18,9 @@
 </script>
 
 <nav class="navbar">
-  <a class="navbar-brand" href="../index.html">VINTAGE<span>SPORTS</span></a>
-  <div class="nav-actions">
+  <a class="navbar-brand" href="admin_dashboard.html">VINTAGE<span>SPORTS</span></a>
+  <div class="nav-actions d-flex gap-2">
+    <a href="../orders.html" class="cart-btn text-decoration-none d-inline-flex align-items-center">User Tracking Page</a>
     <button id="logout-btn" class="cart-btn" type="button">Logout</button>
   </div>
 </nav>
@@ -27,7 +28,7 @@
 <header class="nba-hero">
   <div class="container text-center">
     <div class="hero-title">ADMIN <span>DASHBOARD</span></div>
-    <p class="hero-sub">Manage products and inventory</p>
+    <p class="hero-sub">Manage products, inventory, and orders</p>
     <div class="hero-divider"></div>
   </div>
 </header>
@@ -146,10 +147,36 @@
             <th>Type</th>
             <th>Price</th>
             <th>Inventory</th>
+            <th>Restock</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="inventory-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="admin-section-card">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Orders</h2>
+      <div class="admin-toolbar">
+        <button id="refresh-orders-btn" class="btn-add-cart" type="button">Refresh Orders</button>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Update</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table"></tbody>
       </table>
     </div>
   </div>
@@ -161,7 +188,10 @@
 </footer>
 
 <script>
+  const API_BASE = "http://localhost:3000";
+
   let allProducts = [];
+  let allOrders = [];
 
   function getTotalStock(product) {
     const sizes = product?.sizes || {};
@@ -173,16 +203,53 @@
     return `S:${Number(sizes.S || 0)} | M:${Number(sizes.M || 0)} | L:${Number(sizes.L || 0)} | XL:${Number(sizes.XL || 0)}`;
   }
 
+  function getOrderItemsText(order) {
+    const items = Array.isArray(order.items) ? order.items : [];
+    if (!items.length) return "No items";
+
+    return items.map(item => {
+      const qty = Number(item.quantity || 1);
+      const size = item.size || "N/A";
+      return `${item.name} (${size}) x${qty}`;
+    }).join("<br>");
+  }
+
   async function fetchProducts() {
-    const res = await fetch("/api/products");
-    const data = await res.json();
+    const res = await fetch(`${API_BASE}/api/products`);
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      throw new Error(`Products route returned non-JSON. Status: ${res.status}`);
+    }
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || "Failed to load products.");
     }
 
-    allProducts = data.products;
-    renderProducts();
+    allProducts = data.products || [];
+    renderProducts(document.getElementById("search-input").value || "");
+  }
+
+  async function fetchOrders() {
+    const res = await fetch(`${API_BASE}/api/orders`);
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      throw new Error(`Orders route returned non-JSON. Status: ${res.status}`);
+    }
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to load orders.");
+    }
+
+    allOrders = data.orders || [];
+    renderOrders();
   }
 
   function renderProducts(filter = "") {
@@ -193,6 +260,7 @@
     );
 
     document.getElementById("total-products").textContent = allProducts.length;
+
     document.getElementById("low-stock-products").textContent =
       allProducts.filter(p => {
         const total = getTotalStock(p);
@@ -205,7 +273,7 @@
     if (!filtered.length) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" class="admin-empty-state">No products found.</td>
+          <td colspan="7" class="admin-empty-state">No products found.</td>
         </tr>
       `;
       return;
@@ -224,7 +292,7 @@
           <td>
             <div class="admin-product-cell">
               <img
-                src="${product.image || product.img || 'https://via.placeholder.com/60'}"
+                src="${product.image || 'https://via.placeholder.com/60'}"
                 alt="${product.name}"
                 class="admin-product-thumb"
               >
@@ -244,6 +312,29 @@
             </div>
           </td>
           <td>
+            <div class="d-grid gap-2">
+              <div class="d-flex gap-2">
+                <select id="size-${product._id}" class="form-select form-select-sm">
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                </select>
+                <input
+                  id="qty-${product._id}"
+                  type="number"
+                  min="1"
+                  value="1"
+                  class="form-control form-control-sm"
+                  placeholder="Qty"
+                >
+              </div>
+              <button class="btn-add-cart btn-sm" onclick="restockProduct('${product._id}')">
+                Add Stock
+              </button>
+            </div>
+          </td>
+          <td>
             <div class="admin-actions">
               <button class="admin-btn-sm danger" onclick="deleteProduct('${product._id}')">Delete</button>
             </div>
@@ -253,21 +344,158 @@
     }).join("");
   }
 
-  async function deleteProduct(id) {
-    if (!confirm("Delete this product?")) return;
+  function renderOrders() {
+    const tbody = document.getElementById("orders-table");
 
-    const res = await fetch(`/api/products/${id}`, {
-      method: "DELETE"
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      alert(data.message || "Delete failed.");
+    if (!allOrders.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="admin-empty-state">No orders found.</td>
+        </tr>
+      `;
       return;
     }
 
-    await fetchProducts();
+    tbody.innerHTML = allOrders.map(order => `
+      <tr>
+        <td>${order.orderNumber || order._id}</td>
+        <td>
+          <strong>${order.name || "N/A"}</strong><br>
+          <span style="font-size:12px;">${order.email || "No email"}</span>
+        </td>
+        <td>$${Number(order.total || 0).toFixed(2)}</td>
+        <td style="font-size:12px;">${getOrderItemsText(order)}</td>
+        <td>
+          <span class="admin-stock-badge">${order.status || "Pending"}</span>
+        </td>
+        <td>
+          <div class="d-flex gap-2">
+            <select id="status-${order._id}" class="form-select form-select-sm">
+              <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="Processing" ${order.status === "Processing" ? "selected" : ""}>Processing</option>
+              <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
+              <option value="Delivered" ${order.status === "Delivered" ? "selected" : ""}>Delivered</option>
+              <option value="Cancelled" ${order.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+            </select>
+            <button class="btn-add-cart btn-sm" onclick="updateOrderStatus('${order._id}')">Save</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  async function restockProduct(id) {
+    const sizeEl = document.getElementById(`size-${id}`);
+    const qtyEl = document.getElementById(`qty-${id}`);
+
+    if (!sizeEl || !qtyEl) {
+      alert("Restock inputs not found for this product.");
+      return;
+    }
+
+    const size = sizeEl.value;
+    const quantity = Number(qtyEl.value);
+
+    if (!quantity || quantity < 1) {
+      alert("Enter a valid quantity.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/products/${id}/restock`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ size, quantity })
+      });
+
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        alert(`Restock route returned non-JSON response. Status: ${res.status}`);
+        return;
+      }
+
+      if (!res.ok || !data.success) {
+        alert(data.message || "Failed to restock product.");
+        return;
+      }
+
+      alert("Stock updated successfully.");
+      await fetchProducts();
+    } catch (error) {
+      console.error("Restock fetch error:", error);
+      alert("Restock request failed before reaching JSON response.");
+    }
+  }
+
+  async function updateOrderStatus(orderId) {
+    const status = document.getElementById(`status-${orderId}`).value;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
+      });
+
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        alert(`Order status route returned non-JSON response. Status: ${res.status}`);
+        return;
+      }
+
+      if (!res.ok || !data.success) {
+        alert(data.message || "Failed to update order status.");
+        return;
+      }
+
+      alert("Order status updated.");
+      await fetchOrders();
+    } catch (error) {
+      console.error("Order status update error:", error);
+      alert("Could not update order status.");
+    }
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm("Delete this product?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/products/${id}`, {
+        method: "DELETE"
+      });
+
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        alert(`Delete route returned non-JSON response. Status: ${res.status}`);
+        return;
+      }
+
+      if (!res.ok || !data.success) {
+        alert(data.message || "Delete failed.");
+        return;
+      }
+
+      await fetchProducts();
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Could not delete product.");
+    }
   }
 
   document.getElementById("add-product-form").addEventListener("submit", async function (e) {
@@ -289,28 +517,41 @@
       }
     };
 
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const res = await fetch(`${API_BASE}/api/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    const data = await res.json();
+      const text = await res.text();
 
-    if (!res.ok || !data.success) {
-      alert(data.message || "Failed to add product.");
-      return;
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        alert(`Add product route returned non-JSON response. Status: ${res.status}`);
+        return;
+      }
+
+      if (!res.ok || !data.success) {
+        alert(data.message || "Failed to add product.");
+        return;
+      }
+
+      this.reset();
+      document.getElementById("stock-s").value = 10;
+      document.getElementById("stock-m").value = 10;
+      document.getElementById("stock-l").value = 10;
+      document.getElementById("stock-xl").value = 10;
+
+      await fetchProducts();
+    } catch (error) {
+      console.error("Add product error:", error);
+      alert("Could not add product.");
     }
-
-    this.reset();
-    document.getElementById("stock-s").value = 10;
-    document.getElementById("stock-m").value = 10;
-    document.getElementById("stock-l").value = 10;
-    document.getElementById("stock-xl").value = 10;
-
-    await fetchProducts();
   });
 
   document.getElementById("search-input").addEventListener("input", function (e) {
@@ -318,7 +559,17 @@
   });
 
   document.getElementById("refresh-btn").addEventListener("click", function () {
-    fetchProducts();
+    fetchProducts().catch(err => {
+      console.error(err);
+      alert("Products failed: " + err.message);
+    });
+  });
+
+  document.getElementById("refresh-orders-btn").addEventListener("click", function () {
+    fetchOrders().catch(err => {
+      console.error(err);
+      alert("Orders failed: " + err.message);
+    });
   });
 
   document.getElementById("logout-btn").addEventListener("click", function () {
@@ -326,10 +577,23 @@
     window.location.href = "../login.html";
   });
 
-  fetchProducts().catch(err => {
-    console.error(err);
-    alert(err.message);
-  });
+  async function initDashboard() {
+    try {
+      await fetchProducts();
+    } catch (err) {
+      console.error("Products error:", err);
+      alert("Products failed: " + err.message);
+    }
+
+    try {
+      await fetchOrders();
+    } catch (err) {
+      console.error("Orders error:", err);
+      alert("Orders failed: " + err.message);
+    }
+  }
+
+  initDashboard();
 </script>
 
 </body>

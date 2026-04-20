@@ -32,7 +32,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-transporter.verify((error, success) => {
+transporter.verify((error) => {
   if (error) {
     console.error("Mail transporter error:", error);
   } else {
@@ -67,6 +67,8 @@ app.get("/test-email", async (req, res) => {
     res.send("Test email sent successfully.");
   } catch (error) {
     console.error("Test email error:", error);
+    if (error && error.response) console.error("Mail response:", error.response);
+    if (error && error.code) console.error("Mail code:", error.code);
     res.status(500).send("Test email failed: " + error.message);
   }
 });
@@ -204,9 +206,7 @@ app.post("/api/checkout", async (req, res) => {
       });
     }
 
-    // Validate inventory first
     for (const item of cart) {
-
       const productId = item._id || item.id || item.productId;
       const size = item.size;
       const quantity = Number(item.quantity || 1);
@@ -244,7 +244,6 @@ app.post("/api/checkout", async (req, res) => {
 
     const orderNumber = `VSV-${Date.now()}`;
 
-    // Save order to MongoDB
     const order = new Order({
       orderNumber,
       name: name.trim(),
@@ -263,7 +262,6 @@ app.post("/api/checkout", async (req, res) => {
 
     await order.save();
 
-    // Reduce inventory after order save
     for (const item of cart) {
       const productId = item._id || item.id || item.productId;
       const size = item.size;
@@ -273,6 +271,10 @@ app.post("/api/checkout", async (req, res) => {
 
       const product = await Product.findById(productId);
       if (!product) continue;
+
+      if (!product.sizes) {
+        product.sizes = { S: 0, M: 0, L: 0, XL: 0 };
+      }
 
       product.sizes[size] = Math.max(
         0,
@@ -381,7 +383,6 @@ app.post("/api/checkout", async (req, res) => {
    PRODUCTS ROUTES
 ========================= */
 
-// Get all products
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
@@ -398,7 +399,6 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// Get products by category
 app.get("/api/products/category/:category", async (req, res) => {
   try {
     const category = req.params.category.trim();
@@ -417,7 +417,6 @@ app.get("/api/products/category/:category", async (req, res) => {
   }
 });
 
-// Add new product
 app.post("/api/products", async (req, res) => {
   try {
     const { name, team, category, type, price, sizes, image, description } = req.body;
@@ -460,33 +459,95 @@ app.post("/api/products", async (req, res) => {
   }
 });
 
-// Update product
+app.patch("/api/products/:id/restock", async (req, res) => {
+  try {
+    console.log("RESTOCK HIT:", req.params.id, req.body);
+
+    const { size, quantity } = req.body;
+    const validSizes = ["S", "M", "L", "XL"];
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID."
+      });
+    }
+
+    if (!size || !validSizes.includes(size)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid size."
+      });
+    }
+
+    const qty = Number(quantity);
+
+    if (!qty || qty < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be at least 1."
+      });
+    }
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found."
+      });
+    }
+
+    if (!product.sizes) {
+      product.sizes = { S: 0, M: 0, L: 0, XL: 0 };
+    }
+
+    product.sizes[size] = Number(product.sizes[size] || 0) + qty;
+
+    await product.save();
+
+    return res.json({
+      success: true,
+      message: `${qty} stock added to size ${size}.`,
+      product
+    });
+  } catch (error) {
+    console.error("Restock error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to restock product."
+    });
+  }
+});
+
 app.put("/api/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { name, team, category, type, price, sizes, image, description } = req.body;
 
-    const updated = await Product.findByIdAndUpdate(
-      id,
-      {
-        name: name?.trim(),
-        team: team?.trim(),
-        category: category?.trim(),
-        type: type?.trim(),
-        price: price !== undefined ? Number(price) : undefined,
-        sizes: sizes
-          ? {
-              S: Number(sizes.S ?? 0),
-              M: Number(sizes.M ?? 0),
-              L: Number(sizes.L ?? 0),
-              XL: Number(sizes.XL ?? 0)
-            }
-          : undefined,
-        image: image?.trim(),
-        description: description?.trim()
-      },
-      { new: true, runValidators: true }
-    );
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name.trim();
+    if (team !== undefined) updateData.team = team.trim();
+    if (category !== undefined) updateData.category = category.trim();
+    if (type !== undefined) updateData.type = type.trim();
+    if (price !== undefined) updateData.price = Number(price);
+    if (image !== undefined) updateData.image = image.trim();
+    if (description !== undefined) updateData.description = description.trim();
+
+    if (sizes) {
+      updateData.sizes = {
+        S: Number(sizes.S ?? 0),
+        M: Number(sizes.M ?? 0),
+        L: Number(sizes.L ?? 0),
+        XL: Number(sizes.XL ?? 0)
+      };
+    }
+
+    const updated = await Product.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true
+    });
 
     if (!updated) {
       return res.status(404).json({
@@ -508,7 +569,6 @@ app.put("/api/products/:id", async (req, res) => {
   }
 });
 
-// Delete product
 app.delete("/api/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -534,11 +594,66 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
-
-
 /* =========================
-   USER ORDER HISTORY ROUTE
+   ORDERS ROUTES
 ========================= */
+
+app.get("/api/orders", async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      orders
+    });
+  } catch (error) {
+    console.error("Get all orders error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch orders."
+    });
+  }
+});
+
+app.patch("/api/orders/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status."
+      });
+    }
+
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Order status updated successfully.",
+      order
+    });
+  } catch (error) {
+    console.error("Update order status error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update order status."
+    });
+  }
+});
+
 app.get("/api/orders/user/:email", async (req, res) => {
   try {
     const email = req.params.email.trim().toLowerCase();
@@ -558,31 +673,25 @@ app.get("/api/orders/user/:email", async (req, res) => {
   }
 });
 
-app.get("/test-email", async (req, res) => {
-  try {
-    const result = await transporter.sendMail({
-      from: `"Vintage Sports Vault" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: "Test Email",
-      text: "This is a test email from Vintage Sports Vault."
-    });
-
-    console.log("Test email sent:", result.response);
-    res.send("Test email sent successfully.");
-  } catch (error) {
-    console.error("Test email error:", error);
-    if (error && error.response) console.error("Mail response:", error.response);
-    if (error && error.code) console.error("Mail code:", error.code);
-    res.status(500).send("Test email failed: " + error.message);
-  }
-}); 
-
+/* =========================
+   API 404 HANDLER
+========================= */
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API route not found: ${req.method} ${req.originalUrl}`
+  });
+});
 
 /* =========================
    FRONTEND FALLBACK
 ========================= */
-// Keep this AFTER all API routes
-app.use((req, res) => {
+// ONLY serve index.html for non-API routes
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return next();
+  }
+
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
